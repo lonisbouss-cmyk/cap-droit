@@ -5,11 +5,19 @@ import { FICHES2 } from './fiches2';
 import { FICHES3 } from './fiches3';
 import { QCM as QCM1 } from './qcm';
 import { QCM2 } from './qcm2';
+import { QCM3 } from './qcm3';
 import type { Question } from './types';
+import { ARRETS as ARRETS1 } from './arrets';
+import { ARRETS2 } from './arrets2';
+import { CAS as CAS1 } from './cas';
+import { CAS2 } from './cas2';
 export { CODES, ARTICLES } from './articles';
-export { ARRETS } from './arrets';
-export { CAS } from './cas';
 export { METHODES, LEXIQUE, ADAGES } from './extras';
+export { DOSSIERS, GRILLE_NDS, SUJETS_GO, QUESTIONS_JURY, GRILLE_GO, COMPETENCES } from './crfpa';
+
+// Date de mise à jour des contenus et relecture (renseigner le relecteur une fois la relecture faite)
+export const MAJ = '26 novembre 2026';
+export const RELU = { par: '', le: '' };
 
 export const NIVEAUX: Niveau[] = ['L1', 'L2', 'L3', 'M1', 'CRFPA'];
 
@@ -48,4 +56,6 @@ const MATS: Matiere[] = [
 export const MATIERES: Matiere[] = MATS.map((m, i) => ({ m, i })).sort((a, b) => NIVEAUX.indexOf(a.m.niv) - NIVEAUX.indexOf(b.m.niv) || a.i - b.i).map((x) => x.m);
 
 export const FICHES: Fiche[] = [...FICHES1, ...FICHES2, ...FICHES3];
-export const QCM: Question[] = [...QCM1, ...QCM2];
+export const QCM: Question[] = [...QCM1, ...QCM2, ...QCM3];
+export const ARRETS = [...ARRETS1, ...ARRETS2];
+export const CAS = [...CAS1, ...CAS2];
