@@ -25,6 +25,7 @@ jobs:
           mkdir app
           cp -r repo/. app/
           rm -rf app/.git app/.github
+          cd app && node extras/mkicon.js
       - name: Installer les dependances
         working-directory: app
         run: |
