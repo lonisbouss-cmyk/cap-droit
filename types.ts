@@ -34,7 +34,7 @@ export type Arret = {
   apport: string;
 };
 
-export type Question = { q: string; c: string[]; a: number; e: string; m: string };
+export type Question = { q: string; c: string[]; a: number | number[]; e: string; m: string };
 
 export type Etape = { q: string; c: string[]; a: number; e: string };
 export type CasPratique = { id: string; titre: string; m: string; niv: Niveau; enonce: string; etapes: Etape[]; retenir: string[]; fiches: string[] };
