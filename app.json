@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "CAP Droit",
+    "slug": "cap-droit",
+    "version": "1.1.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#1B2A4A" },
+    "android": {
+      "package": "com.lonis57.capdroit",
+      "versionCode": 2,
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#1B2A4A" }
+    },
+    "ios": { "bundleIdentifier": "com.lonis57.capdroit", "supportsTablet": true },
+    "web": { "favicon": "./assets/favicon.png", "name": "CAP Droit", "shortName": "CAP Droit", "themeColor": "#1B2A4A", "backgroundColor": "#F6F3EE" }
+  }
+}
