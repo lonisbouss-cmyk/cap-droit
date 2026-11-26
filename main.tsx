@@ -3,8 +3,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Linking, TextInput, Platform, SafeAreaView, StatusBar, BackHandler } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C, SOMBRE, Page, H1, H2, Sub, Card, Btn, Back, Tag, Chip, Chips, SearchBox, Bar, Notice, Row, norm, u } from './ui';
-import { MATIERES, NIVEAUX, FICHES, CODES, ARTICLES, ARRETS, QCM, CAS, METHODES, LEXIQUE, ADAGES } from './data';
+import { MATIERES, NIVEAUX, FICHES, CODES, ARTICLES, ARRETS, QCM, CAS, METHODES, LEXIQUE, ADAGES, DOSSIERS, GRILLE_NDS, SUJETS_GO, QUESTIONS_JURY, GRILLE_GO, COMPETENCES, MAJ, RELU } from './data';
 import type { Fiche, Article, Arret, Question, CasPratique, Methode, Niveau } from './types';
+import { AuthGate, useSync, Signaler, Compte, CLOUD_OK, demanderTuteur, estAdmin, listerSignalements, marquerSignalement, type User } from './cloud';
 
 // ---------- état sauvegardé ----------
 type St = {
@@ -19,9 +20,13 @@ type St = {
   casDone: Record<string, number>;
   jours: string[];
   examBest: number;
+  nds?: Record<string, string>;
+  go?: number;
+  carnet?: { stages: { id: string; service: string; periode: string; notes: string }[]; gestes: Record<string, number> };
   niveau: Niveau | 'tous';
   box: Record<string, number>;
   due: Record<string, string>;
+  maj?: number;
 };
 const VIDE: St = { fav: {}, lu: {}, maitrise: {}, notes: {}, qTot: 0, qOk: 0, parM: {}, erreurs: [], casDone: {}, jours: [], examBest: 0, niveau: 'tous', box: {}, due: {} };
 const KEY = 'capd:state';
@@ -44,9 +49,10 @@ function shuffle<T>(a: T[]): T[] {
 }
 
 // Mélange l'ordre des réponses (la bonne réponse change de place à chaque fois)
-function melanger<T extends { c: string[]; a: number }>(q: T): T {
+function melanger<T extends { c: string[]; a: number | number[] }>(q: T): T {
   const ordre = shuffle(q.c.map((_, i) => i));
-  return { ...q, c: ordre.map((i) => q.c[i]), a: ordre.indexOf(q.a) };
+  const a = Array.isArray(q.a) ? q.a.map((x) => ordre.indexOf(x)).sort((x, y) => x - y) : ordre.indexOf(q.a);
+  return { ...q, c: ordre.map((i) => q.c[i]), a };
 }
 
 // QCM générés automatiquement à partir des articles (quel article dit quoi)
@@ -105,17 +111,32 @@ type Route =
   | { s: 'notes' }
   | { s: 'progression' }
   | { s: 'reglages' }
-  | { s: 'apropos' };
+  | { s: 'apropos' }
+  | { s: 'compte' }
+  | { s: 'carnet' }
+  | { s: 'tuteur' }
+  | { s: 'admin' }
+  | { s: 'grands' }
+  | { s: 'crfpa' }
+  | { s: 'ndslist' }
+  | { s: 'nds'; id: string }
+  | { s: 'grandoral' };
 
 const TABS: { id: string; label: string; ic: string; root: Route }[] = [
   { id: 'home', label: 'Accueil', ic: '⌂', root: { s: 'home' } },
   { id: 'cours', label: 'Cours', ic: '§', root: { s: 'cours' } },
-  { id: 'codes', label: 'Codes', ic: '⚖', root: { s: 'codes' } },
-  { id: 'train', label: "S'entraîner", ic: '✓', root: { s: 'train' } },
   { id: 'outils', label: 'Outils', ic: '☰', root: { s: 'outils' } },
+  { id: 'train', label: 'Réviser', ic: '✓', root: { s: 'train' } },
+  { id: 'grands', label: 'Arrêts', ic: '🏛', root: { s: 'grands' } },
+  { id: 'progres', label: 'Progrès', ic: '◔', root: { s: 'progression' } },
 ];
 
-export default function MainApp() {
+export default function Root() {
+  return <AuthGate>{(user, sortir) => <MainApp key={user?.id || 'local'} user={user} sortir={sortir} />}</AuthGate>;
+}
+
+function MainApp({ user, sortir }: { user: User | null; sortir: () => void }) {
+  const cle = user ? KEY + ':' + user.id : KEY;
   const [st, setSt] = useState<St>(VIDE);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState('home');
@@ -124,7 +145,7 @@ export default function MainApp() {
   useEffect(() => {
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(KEY);
+        const raw = (await AsyncStorage.getItem(cle)) || (user ? await AsyncStorage.getItem(KEY) : null);
         if (raw) setSt({ ...VIDE, ...JSON.parse(raw) });
       } catch {}
       setReady(true);
@@ -135,16 +156,23 @@ export default function MainApp() {
     setSt((prev) => {
       const n = f(prev);
       const d = today();
-      const n2 = n.jours.includes(d) ? n : { ...n, jours: [...n.jours, d].slice(-60) };
-      AsyncStorage.setItem(KEY, JSON.stringify(n2)).catch(() => {});
+      const n1 = n.jours.includes(d) ? n : { ...n, jours: [...n.jours, d].slice(-60) };
+      const n2 = { ...n1, maj: Date.now() };
+      AsyncStorage.setItem(cle, JSON.stringify(n2)).catch(() => {});
       return n2;
     });
+
+  const sync = useSync(user, st, ready, (t) => {
+    const n = { ...VIDE, ...t };
+    AsyncStorage.setItem(cle, JSON.stringify(n)).catch(() => {});
+    setSt(n);
+  });
 
   const route = stack[stack.length - 1];
   const go = (r: Route) => setStack((s) => [...s, r]);
   const back = () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
   const switchTab = (id: string) => {
-    const t = TABS.find((x) => x.id === id)!;
+    const t = TABS.find((x) => x.id === id) || TABS[0];
     setTab(id);
     setStack([t.root]);
   };
@@ -181,7 +209,7 @@ export default function MainApp() {
 
   if (!ready) return <View style={{ flex: 1, backgroundColor: C.bg }} />;
 
-  const P = { st, save, go, back, openFiche, openArt, openArret, startQcm, switchTab };
+  const P = { st, save, go, back, openFiche, openArt, openArret, startQcm, switchTab, user, sortir, sync, racine: stack.length === 1 };
   let screen: any = null;
   switch (route.s) {
     case 'home': screen = <Home {...P} />; break;
@@ -211,12 +239,28 @@ export default function MainApp() {
     case 'progression': screen = <Progression {...P} />; break;
     case 'reglages': screen = <Reglages {...P} />; break;
     case 'apropos': screen = <APropos {...P} />; break;
+    case 'compte': screen = <CompteView {...P} />; break;
+    case 'carnet': screen = <Carnet {...P} />; break;
+    case 'tuteur': screen = <Tuteur {...P} />; break;
+    case 'admin': screen = <AdminView {...P} />; break;
+    case 'grands': screen = <GrandsView {...P} />; break;
+    case 'crfpa': screen = <Crfpa {...P} />; break;
+    case 'ndslist': screen = <NdsList {...P} />; break;
+    case 'nds': screen = <NdsView key={route.id} {...P} id={route.id} />; break;
+    case 'grandoral': screen = <GrandOral {...P} />; break;
   }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
-      <StatusBar barStyle={SOMBRE ? 'light-content' : 'dark-content'} backgroundColor={C.bg} />
-      <View key={String(stack.length) + route.s} style={{ flex: 1, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0 }}>{screen}</View>
+      <StatusBar barStyle="light-content" backgroundColor="#1B2A4A" />
+      <View style={[s.header, { paddingTop: (Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0) + 8 }]}>
+        <View style={s.logo}><Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>⚖</Text></View>
+        <Text style={s.brand}>CAP DROIT</Text>
+        <Pressable onPress={() => { setTab('outils'); setStack([{ s: 'outils' }, { s: 'compte' }]); }} hitSlop={8} style={s.avatar}>
+          <Text style={{ color: '#fff', fontWeight: '900' }}>{user ? user.email.slice(0, 1).toUpperCase() : '👤'}</Text>
+        </Pressable>
+      </View>
+      <View key={String(stack.length) + route.s} style={{ flex: 1 }}>{screen}</View>
       <View style={s.tabbar}>
         {TABS.map((t) => {
           const on = t.id === tab;
@@ -242,6 +286,10 @@ type PP = {
   openArret: (id: string) => void;
   startQcm: (t: string, l: Question[], exam?: boolean) => void;
   switchTab: (id: string) => void;
+  user: User | null;
+  sortir: () => void;
+  sync: string;
+  racine: boolean;
 };
 
 // ---------- Accueil ----------
@@ -262,7 +310,7 @@ function duJour<T>(arr: T[], sel: number): T {
   return arr[k % arr.length];
 }
 
-function Home({ st, go, openFiche, openArt, openArret, startQcm, switchTab }: PP) {
+function Home({ st, go, openFiche, openArt, openArret, startQcm, switchTab, user }: PP) {
   const lus = Object.keys(st.lu).length;
   const pct = st.qTot ? Math.round((100 * st.qOk) / st.qTot) : 0;
   const art = duJour(ARTICLES, 3);
@@ -273,7 +321,7 @@ function Home({ st, go, openFiche, openArt, openArret, startQcm, switchTab }: PP
   return (
     <Page>
       <View style={s.hero}>
-        <Text style={s.heroL}>CAP DROIT</Text>
+        <Text style={s.heroL}>{user ? 'Bon retour !' : 'Bienvenue'}</Text>
         <Text style={s.heroT}>Réviser le droit, de la L1 au CRFPA</Text>
         <View style={{ flexDirection: 'row', marginTop: 14, gap: 10 }}>
           <Stat v={String(lus)} l={`fiches lues / ${FICHES.length}`} />
@@ -332,8 +380,11 @@ function Home({ st, go, openFiche, openArt, openArret, startQcm, switchTab }: PP
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {[
           ['📚', 'Cours', () => switchTab('cours')],
-          ['⚖️', 'Codes', () => switchTab('codes')],
-          ['🏛', 'Grands arrêts', () => go({ s: 'arrets' })],
+          ['⚖️', 'Codes', () => go({ s: 'codes' })],
+          ['🏛', 'Grands arrêts', () => switchTab('grands')],
+          ['🎓', 'Prépa CRFPA', () => go({ s: 'crfpa' })],
+          ['📂', 'Cas pratiques', () => go({ s: 'caslist' })],
+          ['📈', 'Progrès', () => switchTab('progres')],
           ['✍️', 'Méthodologie', () => go({ s: 'methodes' })],
           ['🃏', 'Révision express', () => go({ s: 'flashmenu' })],
           ['★', 'Favoris', () => go({ s: 'favoris' })],
@@ -466,7 +517,7 @@ function MatiereView({ id, st, back, openFiche, startQcm, go }: PP & { id: strin
   );
 }
 
-function FicheView({ id, st, save, back, openArt, openArret, openFiche }: PP & { id: string }) {
+function FicheView({ id, st, save, back, openArt, openArret, openFiche, go }: PP & { id: string }) {
   const f = ficheById(id)!;
   const m = matById(f.m);
   const [note, setNote] = useState(st.notes[id] || '');
@@ -495,7 +546,9 @@ function FicheView({ id, st, save, back, openArt, openArret, openFiche }: PP & {
       </View>
       {f.parts.map((p, i) => (
         <Card key={i}>
-          <Text style={{ fontWeight: '900', color: C.red, marginBottom: 8, fontSize: 15 }}>{p.t}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={{ fontWeight: '900', color: C.red, fontSize: 15, flex: 1 }}>{p.t}</Text>
+          </View>
           {p.l.map((l, k) => (
             <View key={k} style={{ flexDirection: 'row', marginBottom: 5 }}>
               <Text style={{ color: C.gold, fontWeight: '900', marginRight: 8, lineHeight: 22 }}>•</Text>
@@ -560,18 +613,21 @@ function FicheView({ id, st, save, back, openArt, openArret, openFiche }: PP & {
           ))}
         </>
       )}
+      <Text style={{ color: C.muted, fontSize: 12, lineHeight: 17, marginTop: 6 }}>{'Fiche de synthèse rédigée à visée pédagogique, à jour au ' + MAJ + '. Relecture par un professionnel du droit : ' + (RELU.par ? RELU.par + (RELU.le ? ', ' + RELU.le : '') : 'en cours') + '. Le droit évolue vite : vérifie toujours les textes en vigueur sur Légifrance.'}</Text>
+      <Signaler cible={'fiche:' + f.id} libelle={f.titre} />
     </Page>
   );
 }
 
 // ---------- Codes ----------
-function Codes({ st, openArt, go }: PP) {
+function Codes({ st, openArt, go, back }: PP) {
   const [code, setCode] = useState<string>('tous');
   const [q, setQ] = useState('');
   const nq = norm(q.trim());
   const list = ARTICLES.filter((a) => (code === 'tous' || a.code === code) && (!nq || norm(a.num + ' ' + a.titre + ' ' + a.texte).includes(nq) || norm('article ' + a.num) === nq));
   return (
     <Page>
+      <Back onPress={back} />
       <H1>Codes</H1>
       <Sub>{ARTICLES.length} articles essentiels, classés par code, et {ARRETS.length} grands arrêts.</Sub>
       <Card onPress={() => go({ s: 'arrets' })} style={{ backgroundColor: C.redL, borderColor: 'transparent' }}>
@@ -710,7 +766,7 @@ function Train({ st, startQcm, go }: PP) {
   const pool = QCM.filter((q) => niv === 'tous' || matById(q.m)?.niv === niv);
   return (
     <Page>
-      <H1>S'entraîner</H1>
+      <H1>Réviser</H1>
       <Sub>{QCM.length} QCM corrigés, {CAS.length} cas pratiques, et des quiz générés à partir des codes et du lexique.</Sub>
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 4 }}>
         <View style={{ flex: 1 }}>
@@ -740,6 +796,18 @@ function Train({ st, startQcm, go }: PP) {
       <Card onPress={() => go({ s: 'flashmenu' })} style={{ backgroundColor: C.goldL, borderColor: 'transparent' }}>
         <Text style={{ fontWeight: '800', color: C.ink }}>🃏 Révision express (cartes mémoire) ›</Text>
         <Text style={{ color: C.muted, fontSize: 13 }}>Arrêts, articles, adages et lexique, avec répétition espacée.</Text>
+      </Card>
+      <Card onPress={() => go({ s: 'tuteur' })} style={{ backgroundColor: C.redL, borderColor: 'transparent' }}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>🤖 Tuteur IA ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>Pose tes questions de cours, reçois une explication.</Text>
+      </Card>
+      <Card onPress={() => go({ s: 'crfpa' })}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>🎓 Prépa CRFPA ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>Note de synthèse, grand oral, consultations, procédures.</Text>
+      </Card>
+      <Card onPress={() => startQcm('QCM à réponses multiples', shuffle(QCM.filter((q) => Array.isArray(q.a))).slice(0, 15))}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>☑️ QCM à réponses multiples ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>{QCM.filter((q) => Array.isArray(q.a)).length} questions à réponses multiples, notation par discordances.</Text>
       </Card>
       <Card onPress={() => go({ s: 'caslist' })}>
         <Text style={{ fontWeight: '800', color: C.ink }}>📂 Cas pratiques corrigés ›</Text>
@@ -787,14 +855,29 @@ function Train({ st, startQcm, go }: PP) {
   );
 }
 
+// Bonnes réponses (QRU : un nombre ; QRM : une liste)
+const bonnes = (q: Question): number[] => (Array.isArray(q.a) ? q.a : [q.a]);
+const estQrm = (q: Question) => Array.isArray(q.a);
+// Notation par discordances : 0 discordance = 1 point, 1 = 0,5, 2 = 0,2, 3 ou plus = 0
+function noter(q: Question, choix: number[]): number {
+  const b = bonnes(q);
+  if (!estQrm(q)) return choix.length === 1 && choix[0] === b[0] ? 1 : 0;
+  let d = 0;
+  q.c.forEach((_, k) => { if (b.includes(k) !== choix.includes(k)) d++; });
+  return d === 0 ? 1 : d === 1 ? 0.5 : d === 2 ? 0.2 : 0;
+}
+const fmtPts = (x: number) => (Math.round(x * 10) / 10).toString().replace('.', ',');
+
 function QcmRun({ titre, list, exam, st, save, back }: PP & { titre: string; list: Question[]; exam?: boolean }) {
   const [i, setI] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
+  const [sel, setSel] = useState<number[]>([]);
+  const [valide, setValide] = useState(false);
   const [score, setScore] = useState(0);
   const [fin, setFin] = useState(false);
-  const [reste, setReste] = useState(exam ? 20 * 60 : 0);
-  const [rep, setRep] = useState<(number | null)[]>([]);
+  const [reste, setReste] = useState(exam ? list.length * 60 : 0);
+  const [rep, setRep] = useState<number[][]>([]);
   const q = list[Math.min(i, list.length - 1)];
+  const multi = estQrm(q);
 
   useEffect(() => {
     if (!exam || fin) return;
@@ -805,7 +888,8 @@ function QcmRun({ titre, list, exam, st, save, back }: PP & { titre: string; lis
     if (exam && reste === 0 && !fin) terminer(score);
   }, [reste]);
 
-  const enregistrer = (ok: boolean) => {
+  const enregistrer = (pts: number) => {
+    const ok = pts === 1;
     const k: string | null = (q as any).k || null;
     save((x) => {
       const pm = { ...x.parM };
@@ -819,14 +903,19 @@ function QcmRun({ titre, list, exam, st, save, back }: PP & { titre: string; lis
     });
   };
 
-  const choisir = (c: number) => {
-    if (picked !== null) return;
-    setPicked(c);
-    const ok = c === q.a;
-    if (ok) setScore((x) => x + 1);
-    setRep((r) => [...r, c]);
-    enregistrer(ok);
-    if (exam) setTimeout(() => suivant(ok ? score + 1 : score), 350);
+  const valider = (choix: number[]) => {
+    if (valide || !choix.length) return;
+    const pts = noter(q, choix);
+    setValide(true);
+    setScore((x) => x + pts);
+    setRep((r) => [...r, choix]);
+    enregistrer(pts);
+    if (exam) setTimeout(() => suivant(score + pts), 350);
+  };
+  const toucher = (k: number) => {
+    if (valide) return;
+    if (!multi) { setSel([k]); valider([k]); return; }
+    setSel((s0) => (s0.includes(k) ? s0.filter((x) => x !== k) : [...s0, k]));
   };
   const terminer = (sc: number) => {
     setFin(true);
@@ -839,7 +928,8 @@ function QcmRun({ titre, list, exam, st, save, back }: PP & { titre: string; lis
     if (i + 1 >= list.length) terminer(sc);
     else {
       setI(i + 1);
-      setPicked(null);
+      setSel([]);
+      setValide(false);
     }
   };
 
@@ -850,20 +940,24 @@ function QcmRun({ titre, list, exam, st, save, back }: PP & { titre: string; lis
         <Back onPress={back} />
         <View style={s.hero}>
           <Text style={s.heroL}>{titre}</Text>
-          <Text style={{ color: '#fff', fontSize: 40, fontWeight: '900' }}>{exam ? `${note}/20` : `${score}/${list.length}`}</Text>
+          <Text style={{ color: '#fff', fontSize: 40, fontWeight: '900' }}>{exam ? `${note}/20` : `${fmtPts(score)}/${list.length}`}</Text>
           <Text style={{ color: 'rgba(255,255,255,0.85)' }}>{score >= list.length * 0.8 ? 'Excellent travail !' : score >= list.length * 0.5 ? 'Bonne base, continue.' : 'Relis les fiches puis recommence.'}</Text>
         </View>
         {exam && (
           <>
             <H2>Correction</H2>
-            {list.slice(0, rep.length).map((qq, k) => (
-              <Card key={k} style={{ borderLeftWidth: 4, borderLeftColor: rep[k] === qq.a ? C.ok : C.ko }}>
-                <Text style={{ fontWeight: '700', color: C.ink, marginBottom: 4 }}>{qq.q}</Text>
-                <Text style={{ color: C.ok, fontWeight: '700' }}>✓ {qq.c[qq.a]}</Text>
-                {rep[k] !== qq.a && rep[k] !== null && rep[k] !== undefined && <Text style={{ color: C.ko }}>✗ {qq.c[rep[k] as number]}</Text>}
-                <Text style={{ color: C.muted, marginTop: 4, lineHeight: 19 }}>{qq.e}</Text>
-              </Card>
-            ))}
+            {list.slice(0, rep.length).map((qq, k) => {
+              const pts = noter(qq, rep[k] || []);
+              return (
+                <Card key={k} style={{ borderLeftWidth: 4, borderLeftColor: pts === 1 ? C.ok : pts > 0 ? C.gold : C.ko }}>
+                  <Text style={{ fontWeight: '700', color: C.ink, marginBottom: 4 }}>{qq.q}</Text>
+                  {bonnes(qq).map((b) => <Text key={b} style={{ color: C.ok, fontWeight: '700' }}>✓ {qq.c[b]}</Text>)}
+                  {(rep[k] || []).filter((x) => !bonnes(qq).includes(x)).map((x) => <Text key={x} style={{ color: C.ko }}>✗ {qq.c[x]}</Text>)}
+                  {estQrm(qq) && <Text style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>{fmtPts(pts)} point</Text>}
+                  <Text style={{ color: C.muted, marginTop: 4, lineHeight: 19 }}>{qq.e}</Text>
+                </Card>
+              );
+            })}
           </>
         )}
         <Btn title="Terminer" onPress={back} />
@@ -873,35 +967,43 @@ function QcmRun({ titre, list, exam, st, save, back }: PP & { titre: string; lis
 
   const mm = Math.floor(reste / 60);
   const ss = String(reste % 60).padStart(2, '0');
+  const pts = valide ? noter(q, sel) : 0;
   return (
     <Page>
       <Back onPress={back} label="Quitter" />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <Text style={{ color: C.muted, fontWeight: '700' }}>{titre} · {i + 1}/{list.length}</Text>
-        {exam ? <Text style={{ color: reste < 120 ? C.ko : C.navy, fontWeight: '900' }}>⏱ {mm}:{ss}</Text> : <Text style={{ color: C.ok, fontWeight: '800' }}>{score} ✓</Text>}
+        {exam ? <Text style={{ color: reste < 120 ? C.ko : C.navy, fontWeight: '900' }}>⏱ {mm}:{ss}</Text> : <Text style={{ color: C.ok, fontWeight: '800' }}>{fmtPts(score)} ✓</Text>}
       </View>
-      <Bar value={(i + (picked !== null ? 1 : 0)) / list.length} />
-      <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink, marginVertical: 16, lineHeight: 25 }}>{q.q}</Text>
+      <Bar value={(i + (valide ? 1 : 0)) / list.length} />
+      {multi && <View style={{ marginTop: 12 }}><Tag label="QRM · plusieurs réponses possibles" color={C.gold} /></View>}
+      <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink, marginTop: multi ? 4 : 16, marginBottom: 16, lineHeight: 25 }}>{q.q}</Text>
       {q.c.map((c, k) => {
-        const show = picked !== null && !exam;
-        const good = show && k === q.a;
-        const bad = show && k === picked && k !== q.a;
+        const show = valide && !exam;
+        const isB = bonnes(q).includes(k);
+        const pris = sel.includes(k);
+        const good = show && isB;
+        const bad = show && pris && !isB;
         return (
-          <Pressable key={k} onPress={() => choisir(k)} style={[s.choice, good && { borderColor: C.ok, backgroundColor: C.okL }, bad && { borderColor: C.ko, backgroundColor: C.koL }, exam && picked === k && { borderColor: C.navy }]}>
-            <Text style={{ color: C.ink, fontSize: 15, fontWeight: good || bad ? '700' : '500' }}>
-              {good ? '✓ ' : bad ? '✗ ' : ''}
+          <Pressable key={k} onPress={() => toucher(k)} style={[s.choice, !show && pris && { borderColor: C.navy, backgroundColor: C.navyL }, good && { borderColor: C.ok, backgroundColor: C.okL }, bad && { borderColor: C.ko, backgroundColor: C.koL }]}>
+            <Text style={{ color: C.ink, fontSize: 15, fontWeight: good || bad || pris ? '700' : '500' }}>
+              {multi && !show ? (pris ? '☑ ' : '☐ ') : ''}
+              {good ? (pris || !multi ? '✓ ' : '◌ ') : bad ? '✗ ' : ''}
               {c}
             </Text>
           </Pressable>
         );
       })}
-      {picked !== null && !exam && (
+      {multi && !valide && <Btn title="Valider mes réponses" disabled={!sel.length} onPress={() => valider(sel)} />}
+      {valide && !exam && (
         <>
-          <Card style={{ backgroundColor: picked === q.a ? C.okL : C.koL, borderColor: 'transparent', marginTop: 6 }}>
-            <Text style={{ fontWeight: '900', color: picked === q.a ? C.ok : C.ko, marginBottom: 4 }}>{picked === q.a ? 'Bonne réponse' : 'Pas tout à fait'}</Text>
+          <Card style={{ backgroundColor: pts === 1 ? C.okL : pts > 0 ? C.goldL : C.koL, borderColor: 'transparent', marginTop: 6 }}>
+            <Text style={{ fontWeight: '900', color: pts === 1 ? C.ok : pts > 0 ? C.gold : C.ko, marginBottom: 4 }}>{pts === 1 ? 'Bonne réponse' : pts > 0 ? `Presque : ${fmtPts(pts)} point` : 'Pas tout à fait'}</Text>
+            {multi && <Text style={{ color: C.muted, fontSize: 12, marginBottom: 4 }}>Notation par discordances : 0 discordance = 1 ; 1 = 0,5 ; 2 = 0,2 ; 3 ou plus = 0.{pts < 1 ? ' ◌ = bonne réponse non cochée.' : ''}</Text>}
             <Text style={{ color: C.ink, lineHeight: 21 }}>{q.e}</Text>
           </Card>
           <Btn title={i + 1 >= list.length ? 'Voir mon résultat' : 'Question suivante'} onPress={() => suivant()} />
+          <Signaler key={i} cible={'qcm:' + (q as any).m + ':' + q.q.slice(0, 120)} libelle={'QCM ' + (i + 1)} />
         </>
       )}
     </Page>
@@ -1017,6 +1119,7 @@ function CasView({ id, save, back, openFiche }: PP & { id: string }) {
           ))}
           <Btn title="Refaire ce cas" kind="ghost" onPress={() => { setStep(0); setPicked(null); setScore(0); }} />
           <Btn title="Retour aux cas" onPress={back} />
+          <Signaler cible={'cas:' + cas.id} libelle={cas.titre} />
         </>
       )}
     </Page>
@@ -1024,18 +1127,21 @@ function CasView({ id, save, back, openFiche }: PP & { id: string }) {
 }
 
 // ---------- Outils ----------
-function Outils({ go }: PP) {
+function Outils({ go, user }: PP) {
   const items: [string, string, string, Route][] = [
+    ['⚖️', 'Codes', `${ARTICLES.length} articles essentiels, classés par code`, { s: 'codes' }],
+    ['🎓', 'Prépa CRFPA', 'Note de synthèse, grand oral, consultations', { s: 'crfpa' }],
     ['✍️', 'Méthodologie', 'Dissertation, commentaire, cas pratique, fiche d’arrêt, note de synthèse, grand oral', { s: 'methodes' }],
     ['📖', 'Lexique juridique', `${LEXIQUE.length} termes définis`, { s: 'lexique' }],
-    ['🏺', 'Adages latins', `${ADAGES.length} maximes expliquées`, { s: 'adages' }],
     ['⏱', 'Calcul des délais', 'Appel, pourvoi, recours, prescription', { s: 'delais' }],
     ['🔺', 'Hiérarchie des normes', 'La pyramide et ses contrôles', { s: 'normes' }],
     ['🏛', 'Organisation juridictionnelle', 'Ordres judiciaire et administratif', { s: 'juridictions' }],
+    ['🗂', 'Carnet de l’élève-avocat', 'Stages, PPI et compétences', { s: 'carnet' }],
     ['🃏', 'Révision express', 'Cartes mémoire avec répétition espacée', { s: 'flashmenu' }],
-    ['📈', 'Ma progression', 'Avancement par matière', { s: 'progression' }],
     ['📝', 'Mes notes', 'Toutes tes notes personnelles', { s: 'notes' }],
     ['★', 'Mes favoris', 'Fiches, articles et arrêts enregistrés', { s: 'favoris' }],
+    ['👤', 'Mon compte', CLOUD_OK ? 'Connexion, sauvegarde, suppression du compte' : 'Sauvegarde de la progression', { s: 'compte' }],
+    ...(estAdmin(user) ? [['🛠️', 'Signalements (admin)', 'Lire et traiter les signalements', { s: 'admin' }] as [string, string, string, Route]] : []),
     ['⚙️', 'Réglages', 'Thème, taille du texte, progression', { s: 'reglages' }],
     ['ℹ️', 'À propos', 'Sources, mentions et contact', { s: 'apropos' }],
   ];
@@ -1409,6 +1515,7 @@ function Reglages({ st, save, back }: PP) {
         ))}
       </Chips>
       {!!msg && <Notice>{msg}</Notice>}
+      <Rappels />
       <H2>Ma progression</H2>
       <Card>
         <Row label="Fiches lues" value={`${Object.keys(st.lu).length} / ${FICHES.length}`} />
@@ -1441,11 +1548,488 @@ function APropos({ back }: PP) {
       </Card>
       <Btn kind="ghost" title="Légifrance ↗" onPress={() => Linking.openURL('https://www.legifrance.gouv.fr')} />
       <Btn kind="ghost" title="Signaler une erreur par e-mail" onPress={() => Linking.openURL('mailto:lonisboussouar@gmail.com?subject=CAP%20Droit%20-%20signalement')} />
-      <Text style={{ color: C.muted, fontSize: 12, marginTop: 10 }}>Version 1.1</Text>
+      <Text style={{ color: C.muted, fontSize: 12, marginTop: 10 }}>Version 2.0</Text>
     </Page>
   );
 }
 
+
+// ---------- Grands arrêts et adages (onglet) ----------
+function quizArrets(): Question[] {
+  return shuffle(ARRETS).slice(0, 15).map((a, k) => {
+    const autres = shuffle(ARRETS.filter((x) => x.id !== a.id));
+    if (k % 2 === 0) {
+      const c = shuffle([a.nom, ...autres.slice(0, 3).map((x) => x.nom)]);
+      return { m: 'arrets', q: 'Quel arrêt a posé la solution suivante ? « ' + a.apport + ' »', c, a: c.indexOf(a.nom), e: a.nom + ' (' + a.jur + ', ' + a.date + ').' };
+    }
+    const c = shuffle([a.jur + ', ' + a.date, ...Array.from(new Set(autres.map((x) => x.jur + ', ' + x.date))).filter((x) => x !== a.jur + ', ' + a.date).slice(0, 3)]);
+    return { m: 'arrets', q: 'Juridiction et date de l’arrêt « ' + a.nom + ' » ?', c, a: c.indexOf(a.jur + ', ' + a.date), e: a.apport };
+  });
+}
+
+function GrandsView({ st, save, go, startQcm }: PP) {
+  const [vue, setVue] = useState<'arrets' | 'adages'>('arrets');
+  const [q, setQ] = useState('');
+  const [m, setM] = useState('tous');
+  const [cache, setCache] = useState(false);
+  const [vu, setVu] = useState<string[]>([]);
+  const nq = norm(q.trim());
+  const mats = MATIERES.filter((x) => ARRETS.some((a) => a.m === x.id));
+  const arrets = ARRETS.filter((a) => (m === 'tous' || a.m === m) && (!nq || norm(a.nom + ' ' + a.apport + ' ' + a.jur + ' ' + a.date).includes(nq)));
+  const adages = ADAGES.filter((a) => !nq || norm(a.la + ' ' + a.fr + ' ' + a.sens).includes(nq));
+  const quizAdages = () =>
+    startQcm('Adages latins', shuffle(ADAGES).slice(0, 10).map((a) => {
+      const ch = shuffle([a, ...shuffle(ADAGES.filter((x) => x.la !== a.la)).slice(0, 3)]);
+      return { q: '« ' + a.la + ' » signifie :', c: ch.map((x) => x.fr), a: ch.indexOf(a), e: a.sens, m: 'lexique' };
+    }));
+  return (
+    <Page>
+      <H1>Grands arrêts et adages</H1>
+      <Sub>{ARRETS.length} décisions à savoir citer et {ADAGES.length} adages latins.</Sub>
+      <Chips>
+        <Chip label={'🏛 Arrêts (' + ARRETS.length + ')'} on={vue === 'arrets'} onPress={() => { setVue('arrets'); setVu([]); }} />
+        <Chip label={'🏺 Adages (' + ADAGES.length + ')'} on={vue === 'adages'} onPress={() => { setVue('adages'); setVu([]); }} />
+      </Chips>
+      <Btn title={vue === 'arrets' ? 'Quiz grands arrêts (15 questions)' : 'Quiz adages (10 questions)'} onPress={() => (vue === 'arrets' ? startQcm('Grands arrêts', quizArrets()) : quizAdages())} />
+      <Chips>
+        <Chip label={cache ? '👁 Afficher les réponses' : '🙈 Mode révision (cacher)'} on={cache} onPress={() => { setCache(!cache); setVu([]); }} />
+      </Chips>
+      <SearchBox value={q} onChange={setQ} placeholder={vue === 'arrets' ? 'Nom de l’arrêt ou notion' : 'Chercher un adage'} />
+      {vue === 'arrets' && (
+        <Chips>
+          <Chip label="Toutes" on={m === 'tous'} onPress={() => setM('tous')} />
+          {mats.map((x) => <Chip key={x.id} label={x.nom} on={m === x.id} onPress={() => setM(x.id)} />)}
+        </Chips>
+      )}
+      {vue === 'arrets' &&
+        arrets.map((a) => {
+          const montre = !cache || vu.includes(a.id);
+          return (
+            <Card key={a.id} onPress={cache && !montre ? () => setVu((v) => [...v, a.id]) : () => go({ s: 'arret', id: a.id })} style={{ paddingVertical: 12 }}>
+              <Text style={{ fontWeight: '800', color: C.ink }}>{a.nom}{st.fav['r:' + a.id] ? ' ★' : ''}</Text>
+              <Text style={{ color: C.red, fontSize: 12, fontWeight: '700', marginBottom: 2 }}>{a.jur}, {a.date}</Text>
+              {montre ? <Text style={{ color: C.muted, fontSize: 13, lineHeight: 19 }}>{a.apport}</Text> : <Text style={{ color: C.muted, fontStyle: 'italic' }}>Quel est son apport ? Touche pour vérifier.</Text>}
+            </Card>
+          );
+        })}
+      {vue === 'adages' &&
+        adages.map((a) => {
+          const montre = !cache || vu.includes(a.la);
+          return (
+            <Card key={a.la} onPress={cache && !montre ? () => setVu((v) => [...v, a.la]) : undefined}>
+              <Text style={{ fontStyle: 'italic', fontWeight: '900', color: C.ink, fontSize: 15 }}>{a.la}</Text>
+              {montre ? (
+                <>
+                  <Text style={{ color: C.red, marginTop: 2, fontWeight: '700' }}>« {a.fr} »</Text>
+                  <Text style={{ color: C.muted, marginTop: 6, lineHeight: 19 }}>{a.sens}</Text>
+                </>
+              ) : (
+                <Text style={{ color: C.muted, marginTop: 4, fontStyle: 'italic' }}>Traduction et sens ? Touche pour vérifier.</Text>
+              )}
+            </Card>
+          );
+        })}
+    </Page>
+  );
+}
+
+// ---------- Prépa CRFPA ----------
+function Crfpa({ st, back, go, startQcm }: PP) {
+  const cas = CAS.filter((c) => c.niv === 'CRFPA' || c.niv === 'M1');
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Prépa CRFPA</H1>
+      <Sub>L’examen d’accès au CRFPA : note de synthèse (5 h), droit des obligations (3 h), spécialité (3 h) et procédure (2 h) à l’écrit, puis grand oral et anglais.</Sub>
+      <Card onPress={() => go({ s: 'ndslist' })}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>📄 Note de synthèse ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>{DOSSIERS.length} mini-dossiers chronométrés, plan corrigé et grille d’auto-évaluation.</Text>
+      </Card>
+      <Card onPress={() => go({ s: 'grandoral' })}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>🎤 Grand oral ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>Tirage au sort parmi {SUJETS_GO.length} sujets de libertés fondamentales, chronomètre, questions du jury.</Text>
+      </Card>
+      <Card onPress={() => startQcm('Droit des obligations', shuffle(QCM.filter((q) => ['contrats', 'respciv', 'regime'].includes(q.m))).slice(0, 20))}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>✍️ Épreuve d’obligations : 20 QCM ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>Contrats, responsabilité civile, régime général.</Text>
+      </Card>
+      <Card onPress={() => startQcm('Procédures', shuffle(QCM.filter((q) => ['proccivile', 'procpen', 'contadm'].includes(q.m))).slice(0, 20))}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>⚖️ Procédures : 20 QCM ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>Procédure civile, pénale et contentieux administratif.</Text>
+      </Card>
+      <Card onPress={() => startQcm('Déontologie', shuffle(QCM.filter((q) => q.m === 'deonto' || q.m === 'libertes')).slice(0, 15))}>
+        <Text style={{ fontWeight: '800', color: C.ink }}>🎓 Déontologie et libertés ›</Text>
+        <Text style={{ color: C.muted, fontSize: 13 }}>Pour préparer les questions du grand oral.</Text>
+      </Card>
+      <H2>Consultations et cas pratiques (M1 – CRFPA)</H2>
+      {cas.map((c) => (
+        <Card key={c.id} onPress={() => go({ s: 'cas', id: c.id })} style={{ paddingVertical: 12 }}>
+          <Text style={{ fontWeight: '800', color: C.ink }}>{c.titre}{st.casDone[c.id] !== undefined ? ' ✓' : ''} ›</Text>
+          <Text style={{ color: C.muted, fontSize: 12 }}>{matById(c.m)?.nom} · {c.niv}</Text>
+        </Card>
+      ))}
+      <Notice>Pour la session 2026, les épreuves de spécialité et de procédure prennent la forme d’une ou plusieurs consultations. Vérifie chaque année les précisions de la Commission nationale de l’examen (site du CNB).</Notice>
+    </Page>
+  );
+}
+
+function NdsList({ st, back, go }: PP) {
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Note de synthèse</H1>
+      <Sub>Entraîne-toi à dégager une problématique et un plan à partir des seuls documents. Les dossiers ci-dessous sont courts : le vrai dossier fait une trentaine de pages, en 5 heures.</Sub>
+      {DOSSIERS.map((d) => (
+        <Card key={d.id} onPress={() => go({ s: 'nds', id: d.id })} style={{ paddingVertical: 12 }}>
+          <Text style={{ fontWeight: '800', color: C.ink }}>{d.titre}{st.nds?.[d.id] ? ' ✓' : ''} ›</Text>
+          <Text style={{ color: C.muted, fontSize: 12 }}>{d.docs.length} documents</Text>
+        </Card>
+      ))}
+      <Btn kind="ghost" title="Revoir la méthode de la note de synthèse" onPress={() => go({ s: 'methode', id: 'm-synthese' })} />
+    </Page>
+  );
+}
+
+function NdsView({ id, st, save, back }: PP & { id: string }) {
+  const d = DOSSIERS.find((x) => x.id === id)!;
+  const [duree, setDuree] = useState(45);
+  const [etat, setEtat] = useState<'pret' | 'go' | 'fini'>('pret');
+  const [reste, setReste] = useState(45 * 60);
+  const [plan, setPlan] = useState(st.nds?.[id] || '');
+  const [coche, setCoche] = useState<number[]>([]);
+  useEffect(() => {
+    if (etat !== 'go') return;
+    const t = setInterval(() => setReste((r) => { if (r <= 1) { setEtat('fini'); return 0; } return r - 1; }), 1000);
+    return () => clearInterval(t);
+  }, [etat]);
+  const hh = Math.floor(reste / 3600);
+  const mm = Math.floor((reste % 3600) / 60);
+  const ss = String(reste % 60).padStart(2, '0');
+  const garder = () => save((x) => ({ ...x, nds: { ...(x.nds || {}), [id]: plan } }));
+  return (
+    <Page>
+      <Back onPress={back} />
+      <Tag label="Note de synthèse" />
+      <H1>{d.titre}</H1>
+      <Card style={{ backgroundColor: C.navyL, borderColor: 'transparent' }}>
+        <Text style={u.label}>Consigne</Text>
+        <Text style={u.item}>{d.consigne}</Text>
+      </Card>
+      {etat === 'pret' && (
+        <>
+          <H2>Durée de l’entraînement</H2>
+          <Chips>
+            {[20, 45, 90, 300].map((x) => <Chip key={x} label={x === 300 ? '5 h (réel)' : x + ' min'} on={duree === x} onPress={() => { setDuree(x); setReste(x * 60); }} />)}
+          </Chips>
+          <Btn title="Démarrer le chronomètre" onPress={() => setEtat('go')} />
+        </>
+      )}
+      {etat !== 'pret' && (
+        <View style={{ alignItems: 'center', marginVertical: 6 }}>
+          <Text style={{ fontSize: 36, fontWeight: '900', color: reste < 300 && etat === 'go' ? C.ko : C.ink }}>{hh > 0 ? hh + ':' + String(mm).padStart(2, '0') : mm}:{ss}</Text>
+        </View>
+      )}
+      <H2>Documents</H2>
+      {d.docs.map((x) => (
+        <Card key={x.n}>
+          <Text style={{ fontWeight: '800', color: C.red, marginBottom: 4 }}>Document {x.n} — {x.titre}</Text>
+          <Text style={{ color: C.ink, lineHeight: 21 }}>{x.texte}</Text>
+        </Card>
+      ))}
+      <H2>Ma problématique et mon plan</H2>
+      <TextInput value={plan} onChangeText={setPlan} onBlur={garder} multiline placeholder={'Problématique : …\nI. …\nA. … (doc. …)\nB. …\nII. …'} placeholderTextColor={C.muted} style={{ minHeight: 160, borderWidth: 1, borderColor: C.line, borderRadius: 12, padding: 12, color: C.ink, textAlignVertical: 'top', backgroundColor: C.card, fontSize: 15, marginBottom: 8 }} />
+      {etat !== 'fini' ? (
+        <Btn title="J’ai terminé : voir le corrigé" onPress={() => { garder(); setEtat('fini'); }} />
+      ) : (
+        <>
+          <Card style={{ borderLeftWidth: 4, borderLeftColor: C.gold }}>
+            <Text style={u.label}>Problématique possible</Text>
+            <Text style={[u.item, { marginBottom: 8 }]}>{d.problematique}</Text>
+            <Text style={u.label}>Plan possible</Text>
+            {d.plan.map((l, k) => <Text key={k} style={{ color: C.ink, lineHeight: 21, marginLeft: l.startsWith('I') ? 0 : 14, fontWeight: l.startsWith('I') ? '800' : '500' }}>{l}</Text>)}
+          </Card>
+          <Card>
+            <Text style={u.label}>Conseils</Text>
+            {d.conseils.map((l, k) => <Text key={k} style={u.item}>• {l}</Text>)}
+          </Card>
+          <H2>Grille d’auto-évaluation</H2>
+          {GRILLE_NDS.map((g, k) => {
+            const on = coche.includes(k);
+            return (
+              <Pressable key={k} onPress={() => setCoche((c) => (on ? c.filter((y) => y !== k) : [...c, k]))} style={[s.choice, on && { borderColor: C.ok, backgroundColor: C.okL }]}>
+                <Text style={{ color: C.ink }}>{on ? '☑ ' : '☐ '}{g}</Text>
+              </Pressable>
+            );
+          })}
+          <Text style={{ textAlign: 'center', fontSize: 22, fontWeight: '900', color: C.navy, marginVertical: 8 }}>{coche.length} / {GRILLE_NDS.length}</Text>
+        </>
+      )}
+      <Notice>Documents rédigés pour l’entraînement à partir de textes publics ; les documents marqués « fictif » sont imaginaires.</Notice>
+    </Page>
+  );
+}
+
+function GrandOral({ st, save, back, go }: PP) {
+  const [sujet, setSujet] = useState<{ t: string; theme: string } | null>(null);
+  const [prep, setPrep] = useState(60);
+  const [phase, setPhase] = useState<'tirage' | 'prep' | 'expose' | 'jury' | 'bilan'>('tirage');
+  const [reste, setReste] = useState(0);
+  const [qs, setQs] = useState<string[]>([]);
+  const [coche, setCoche] = useState<number[]>([]);
+  useEffect(() => {
+    if (phase !== 'prep' && phase !== 'expose') return;
+    const t = setInterval(() => setReste((r) => (r > 0 ? r - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [phase]);
+  const tirer = () => { setSujet(SUJETS_GO[Math.floor(Math.random() * SUJETS_GO.length)]); setPhase('tirage'); setCoche([]); };
+  const chrono = <Text style={{ fontSize: 44, fontWeight: '900', textAlign: 'center', color: reste < 60 ? C.ko : C.ink, marginVertical: 8 }}>{Math.floor(reste / 60)}:{String(reste % 60).padStart(2, '0')}</Text>;
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Grand oral</H1>
+      <Sub>Épreuve de libertés et droits fondamentaux. Format habituel : une heure de préparation, 15 minutes d’exposé, puis environ 30 minutes d’échange avec le jury. Entraîne-toi à voix haute.</Sub>
+      {!sujet ? (
+        <Btn title="🎲 Tirer un sujet au sort" onPress={tirer} />
+      ) : (
+        <Card style={{ borderLeftWidth: 4, borderLeftColor: C.gold }}>
+          <Text style={u.label}>{sujet.theme}</Text>
+          <Text style={{ color: C.ink, fontSize: 19, fontWeight: '900', lineHeight: 26 }}>{sujet.t}</Text>
+        </Card>
+      )}
+      {sujet && phase === 'tirage' && (
+        <>
+          <H2>Temps de préparation</H2>
+          <Chips>
+            {[15, 30, 60].map((x) => <Chip key={x} label={x + ' min'} on={prep === x} onPress={() => setPrep(x)} />)}
+          </Chips>
+          <Btn title="Commencer la préparation" onPress={() => { setReste(prep * 60); setPhase('prep'); }} />
+          <Btn kind="ghost" title="Tirer un autre sujet" onPress={tirer} />
+        </>
+      )}
+      {phase === 'prep' && (
+        <>
+          <Text style={{ textAlign: 'center', color: C.muted }}>Préparation : définitions, problématique, plan en deux parties, décisions à citer.</Text>
+          {chrono}
+          <Btn title="Passer à l’exposé (15 min)" onPress={() => { setReste(15 * 60); setPhase('expose'); }} />
+        </>
+      )}
+      {phase === 'expose' && (
+        <>
+          <Text style={{ textAlign: 'center', color: C.muted }}>Exposé : parle sans lire, regarde le jury.</Text>
+          {chrono}
+          <Btn title="Terminer et passer aux questions du jury" onPress={() => { setQs(shuffle(QUESTIONS_JURY).slice(0, 6)); setPhase('jury'); }} />
+        </>
+      )}
+      {phase === 'jury' && (
+        <>
+          <H2>Questions du jury</H2>
+          <Sub>Réponds à voix haute, de façon courte et argumentée.</Sub>
+          {qs.map((q, k) => <Card key={k}><Text style={u.item}>{k + 1}. {q}</Text></Card>)}
+          <Btn title="Auto-évaluation" onPress={() => setPhase('bilan')} />
+        </>
+      )}
+      {phase === 'bilan' && (
+        <>
+          <H2>Grille d’auto-évaluation</H2>
+          {GRILLE_GO.map((g, k) => {
+            const on = coche.includes(k);
+            return (
+              <Pressable key={k} onPress={() => setCoche((c) => (on ? c.filter((y) => y !== k) : [...c, k]))} style={[s.choice, on && { borderColor: C.ok, backgroundColor: C.okL }]}>
+                <Text style={{ color: C.ink }}>{on ? '☑ ' : '☐ '}{g}</Text>
+              </Pressable>
+            );
+          })}
+          <Text style={{ textAlign: 'center', fontSize: 22, fontWeight: '900', color: C.navy, marginVertical: 8 }}>{coche.length} / {GRILLE_GO.length}</Text>
+          <Btn title="Enregistrer et tirer un nouveau sujet" onPress={() => { save((x) => ({ ...x, go: (x.go || 0) + 1 })); tirer(); }} />
+        </>
+      )}
+      {!!st.go && <Text style={{ color: C.muted, textAlign: 'center', marginTop: 8 }}>{st.go} grand(s) oral(aux) d’entraînement réalisé(s).</Text>}
+      <Btn kind="ghost" title="Revoir la méthode du grand oral" onPress={() => go({ s: 'methode', id: 'm-oral' })} />
+    </Page>
+  );
+}
+
+// ---------- Carnet de stage ----------
+type Stage = { id: string; service: string; periode: string; notes: string };
+function Carnet({ st, save, back }: PP) {
+  const c = st.carnet || { stages: [], gestes: {} };
+  const [service, setService] = useState('');
+  const [periode, setPeriode] = useState('');
+  const [notes, setNotes] = useState('');
+  const maj = (f: (x: { stages: Stage[]; gestes: Record<string, number> }) => { stages: Stage[]; gestes: Record<string, number> }) => save((x) => ({ ...x, carnet: f(x.carnet || { stages: [], gestes: {} }) }));
+  const champ = (v: string, set: (s: string) => void, ph: string, multi?: boolean) => (
+    <TextInput value={v} onChangeText={set} placeholder={ph} placeholderTextColor={C.muted} multiline={multi} style={{ borderWidth: 1, borderColor: C.line, borderRadius: 12, padding: 10, color: C.ink, marginBottom: 8, minHeight: multi ? 70 : undefined, textAlignVertical: 'top', backgroundColor: C.card }} />
+  );
+  const faits = COMPETENCES.filter((g) => (c.gestes[g] || 0) > 0).length;
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Carnet de l’élève-avocat</H1>
+      <Notice tone="warn">Carnet personnel. N’y écris jamais de nom de client ni d’information couverte par le secret professionnel.</Notice>
+      <H2>Mes stages</H2>
+      {c.stages.map((x) => (
+        <Card key={x.id}>
+          <Text style={{ fontWeight: '800', color: C.ink }}>{x.service}</Text>
+          {!!x.periode && <Text style={{ color: C.muted }}>{x.periode}</Text>}
+          {!!x.notes && <Text style={[u.item, { marginTop: 6 }]}>{x.notes}</Text>}
+          <Pressable onPress={() => maj((y) => ({ ...y, stages: y.stages.filter((z) => z.id !== x.id) }))} style={{ marginTop: 6 }}><Text style={{ color: C.ko, fontWeight: '700' }}>Supprimer</Text></Pressable>
+        </Card>
+      ))}
+      <Card>
+        <Text style={u.label}>Ajouter un stage</Text>
+        {champ(service, setService, 'Lieu de stage (ex. cabinet en droit social, juridiction)')}
+        {champ(periode, setPeriode, 'Période (ex. janvier – juin 2027)')}
+        {champ(notes, setNotes, 'Objectifs, apprentissages, points à revoir', true)}
+        <Btn title="Ajouter" disabled={!service.trim()} onPress={() => { maj((y) => ({ ...y, stages: [...y.stages, { id: String(Date.now()), service: service.trim(), periode: periode.trim(), notes: notes.trim() }] })); setService(''); setPeriode(''); setNotes(''); }} />
+      </Card>
+      <H2>Compétences ({faits}/{COMPETENCES.length})</H2>
+      {COMPETENCES.map((g) => {
+        const n = c.gestes[g] || 0;
+        return (
+          <Card key={g} style={{ paddingVertical: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ flex: 1, color: C.ink }}>{n > 0 ? '✓ ' : ''}{g}</Text>
+              <Pressable onPress={() => maj((y) => ({ ...y, gestes: { ...y.gestes, [g]: Math.max(0, n - 1) } }))} hitSlop={8} style={s.cpt}><Text style={{ color: C.ink, fontWeight: '900' }}>−</Text></Pressable>
+              <Text style={{ width: 28, textAlign: 'center', fontWeight: '800', color: C.ink }}>{n}</Text>
+              <Pressable onPress={() => maj((y) => ({ ...y, gestes: { ...y.gestes, [g]: n + 1 } }))} hitSlop={8} style={s.cpt}><Text style={{ color: C.ink, fontWeight: '900' }}>+</Text></Pressable>
+            </View>
+          </Card>
+        );
+      })}
+    </Page>
+  );
+}
+
+// ---------- Tuteur IA ----------
+type Msg = { r: 'user' | 'assistant'; t: string };
+function Tuteur({ back, user, sortir }: PP) {
+  const [msgs, setMsgs] = useState<Msg[]>([{ r: 'assistant', t: 'Bonjour ! Je suis le tuteur IA de CAP Droit. Pose-moi une question de cours : notion, article, jurisprudence, méthode du cas pratique ou de la note de synthèse… Je ne remplace ni tes enseignants ni une consultation d’avocat, et je ne traite pas de dossier réel. N’écris aucune information confidentielle.' }]);
+  const [txt, setTxt] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (!user)
+    return (
+      <Page>
+        <Back onPress={back} />
+        <H1>Tuteur IA</H1>
+        <Notice>Le tuteur IA est réservé aux comptes (gratuits), pour limiter les abus.</Notice>
+        <Btn title="Se connecter ou créer un compte" onPress={async () => { await AsyncStorage.removeItem('capd:sanscompte').catch(() => {}); sortir(); }} />
+      </Page>
+    );
+  const envoyer = async () => {
+    const t = txt.trim();
+    if (!t || busy) return;
+    const nv: Msg[] = [...msgs, { r: 'user', t }];
+    setMsgs(nv); setTxt(''); setBusy(true);
+    try {
+      const rep = await demanderTuteur(nv.slice(1).slice(-12).map((m) => ({ role: m.r, content: m.t })));
+      setMsgs([...nv, { r: 'assistant', t: rep }]);
+    } catch (e: any) {
+      setMsgs([...nv, { r: 'assistant', t: '⚠ ' + (e?.message || 'Le tuteur est indisponible pour le moment.') }]);
+    }
+    setBusy(false);
+  };
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Tuteur IA</H1>
+      {msgs.map((m, k) => (
+        <View key={k} style={{ alignSelf: m.r === 'user' ? 'flex-end' : 'flex-start', maxWidth: '88%', backgroundColor: m.r === 'user' ? C.red : C.card, borderColor: C.line, borderWidth: m.r === 'user' ? 0 : 1, borderRadius: 14, padding: 10, marginBottom: 8 }}>
+          <Text style={{ color: m.r === 'user' ? '#fff' : C.ink, lineHeight: 21 }}>{m.t}</Text>
+        </View>
+      ))}
+      {busy && <Text style={{ color: C.muted, marginBottom: 8 }}>Le tuteur réfléchit…</Text>}
+      <TextInput value={txt} onChangeText={setTxt} placeholder="Ta question (ex. : différence entre nullité absolue et relative)" placeholderTextColor={C.muted} multiline style={{ borderWidth: 1, borderColor: C.line, borderRadius: 12, padding: 10, color: C.ink, minHeight: 60, textAlignVertical: 'top', backgroundColor: C.card }} />
+      <Btn title="Envoyer" disabled={!txt.trim() || busy} onPress={envoyer} />
+      <Text style={{ color: C.muted, fontSize: 11, lineHeight: 16 }}>Réponses générées par une IA : elles peuvent contenir des erreurs. Vérifie toujours dans tes cours et les recommandations officielles.</Text>
+    </Page>
+  );
+}
+
+// ---------- Administration des signalements ----------
+function AdminView({ back, user }: PP) {
+  const [list, setList] = useState<any[] | null>(null);
+  const [tous, setTous] = useState(false);
+  const [err, setErr] = useState('');
+  const charger = async () => { setErr(''); try { setList(await listerSignalements(tous)); } catch (e: any) { setErr(e?.message || 'Erreur'); setList([]); } };
+  useEffect(() => { charger(); }, [tous]);
+  if (!estAdmin(user)) return <Page><Back onPress={back} /><Notice>Accès réservé.</Notice></Page>;
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Signalements</H1>
+      <Chips>
+        <Chip label="À traiter" on={!tous} onPress={() => setTous(false)} />
+        <Chip label="Tous" on={tous} onPress={() => setTous(true)} />
+      </Chips>
+      {!!err && <Text style={{ color: C.ko }}>{err}</Text>}
+      {list === null && <Text style={{ color: C.muted }}>Chargement…</Text>}
+      {list && !list.length && <Text style={{ color: C.muted }}>Aucun signalement.</Text>}
+      {(list || []).map((x) => (
+        <Card key={x.id} style={x.traite ? { opacity: 0.6 } : undefined}>
+          <Text style={u.label}>{new Date(x.created_at).toLocaleString('fr-FR')} · {x.plateforme || ''}</Text>
+          <Text style={{ fontWeight: '800', color: C.navy, marginBottom: 4 }}>{x.cible}</Text>
+          <Text style={u.item}>{x.texte}</Text>
+          {String(x.cible).startsWith('fiche:') && ficheById(String(x.cible).slice(6)) && <Text style={{ color: C.muted, marginTop: 4 }}>Fiche : {ficheById(String(x.cible).slice(6))?.titre}</Text>}
+          <Btn kind="ghost" title={x.traite ? 'Marquer à traiter' : '✓ Marquer traité'} onPress={async () => { try { await marquerSignalement(x.id, !x.traite); charger(); } catch (e: any) { setErr(e?.message || 'Erreur'); } }} />
+        </Card>
+      ))}
+    </Page>
+  );
+}
+
+// ---------- Rappels quotidiens (notifications locales, Android et iOS) ----------
+async function planifierRappel(h: number | null): Promise<string> {
+  if (Platform.OS === 'web') return 'web';
+  try {
+    const N: any = require('expo-notifications');
+    await N.cancelAllScheduledNotificationsAsync();
+    if (h === null) return 'off';
+    const p = await N.requestPermissionsAsync();
+    if (!p.granted) return 'refus';
+    if (Platform.OS === 'android') await N.setNotificationChannelAsync('rappels', { name: 'Rappels de révision', importance: N.AndroidImportance.DEFAULT });
+    await N.scheduleNotificationAsync({
+      content: { title: 'CAP Droit', body: 'Quelques QCM aujourd’hui ? 10 minutes suffisent pour garder le rythme.' },
+      trigger: { type: N.SchedulableTriggerInputTypes.DAILY, hour: h, minute: 0, channelId: 'rappels' },
+    });
+    return 'ok';
+  } catch {
+    return 'erreur';
+  }
+}
+
+function Rappels() {
+  const [v, setV] = useState('off');
+  const [msg, setMsg] = useState('');
+  useEffect(() => { AsyncStorage.getItem('capd:rappel').then((x) => setV(x || 'off')); }, []);
+  const choisir = async (x: string) => {
+    const r = await planifierRappel(x === 'off' ? null : Number(x));
+    if (r === 'ok' || r === 'off') { setV(x); AsyncStorage.setItem('capd:rappel', x).catch(() => {}); }
+    setMsg(r === 'ok' ? `Rappel programmé chaque jour à ${x} h.` : r === 'off' ? 'Rappels désactivés.' : r === 'web' ? 'Les rappels sont disponibles dans l’application Android.' : r === 'refus' ? 'Autorise les notifications dans les réglages du téléphone.' : 'Impossible de programmer le rappel.');
+  };
+  return (
+    <>
+      <H2>Rappel de révision</H2>
+      <Chips>
+        {[['off', 'Désactivé'], ['8', '8 h'], ['12', '12 h'], ['18', '18 h'], ['20', '20 h'], ['21', '21 h']].map(([x, l]) => (
+          <Chip key={x} label={l} on={v === x} onPress={() => choisir(x)} />
+        ))}
+      </Chips>
+      {!!msg && <Text style={{ color: C.muted, marginBottom: 8 }}>{msg}</Text>}
+    </>
+  );
+}
+
+// ---------- Mon compte ----------
+function CompteView({ back, user, sortir, sync }: PP) {
+  return (
+    <Page>
+      <Back onPress={back} />
+      <H1>Mon compte</H1>
+      <Compte user={user} sortir={sortir} sync={sync} />
+      <Notice>Ton compte sert uniquement à sauvegarder ta progression (fiches lues, scores, favoris, notes) et à la retrouver sur tes autres appareils. N’écris jamais d’information confidentielle concernant un tiers dans tes notes.</Notice>
+    </Page>
+  );
+}
 
 // ---------- Révision express (cartes mémoire, système de Leitner) ----------
 type Carte = { k: string; recto: string; sous?: string; verso: string; detail?: string };
@@ -1573,12 +2157,13 @@ function MesNotes({ st, back, openFiche }: PP) {
   );
 }
 
-function Progression({ st, back, go }: PP) {
+function Progression({ st, back, go, racine, user, sync }: PP) {
   const lus = Object.keys(st.lu).length;
   return (
     <Page>
-      <Back onPress={back} />
-      <H1>Ma progression</H1>
+      {!racine && <Back onPress={back} />}
+      <H1>Mes progrès</H1>
+      {CLOUD_OK && <Text style={{ color: user ? (sync === 'erreur' ? C.gold : C.ok) : C.muted, marginBottom: 10, fontSize: 13 }}>{user ? (sync === 'erreur' ? '⚠ Hors ligne : sauvegarde en attente' : '☁ Sauvegardé dans ton compte') : 'Sans compte : progression gardée sur cet appareil'}</Text>}
       <Card>
         <Row label="Fiches lues" value={`${lus} / ${FICHES.length}`} />
         <Row label="Fiches maîtrisées" value={String(Object.keys(st.maitrise).length)} />
@@ -1606,6 +2191,13 @@ function Progression({ st, back, go }: PP) {
 }
 
 const s = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1B2A4A', paddingHorizontal: 16, paddingBottom: 10 },
+  logo: { width: 30, height: 30, borderRadius: 9, backgroundColor: '#7A1F3D', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  brand: { color: '#fff', fontWeight: '900', fontSize: 17, letterSpacing: 1.2, flex: 1 },
+  triNum: { width: 22, height: 22, borderRadius: 11, backgroundColor: C.navy, color: '#fff', textAlign: 'center', fontWeight: '900', fontSize: 12, lineHeight: 22, marginRight: 8, overflow: 'hidden' },
+  rang: { color: '#fff', fontWeight: '800', fontSize: 11, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
+  cpt: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
   tabbar: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderColor: C.line, backgroundColor: C.bar, paddingBottom: Platform.OS === 'ios' ? 0 : 6, paddingTop: 6 },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 4 },
   hero: { backgroundColor: '#1B2A4A', borderRadius: 20, padding: 18, marginBottom: 12 },
