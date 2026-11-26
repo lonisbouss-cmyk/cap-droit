@@ -1,0 +1,15 @@
+{
+  "name": "CAP Droit",
+  "short_name": "CAP Droit",
+  "description": "Réviser le droit, de la L1 au CRFPA : cours, codes, grands arrêts, QCM, cas pratiques.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F3EE",
+  "theme_color": "#1B2A4A",
+  "icons": [
+    { "src": "icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "maskable" }
+  ]
+}
