@@ -1,5 +1,5 @@
 // CAP Droit — fonctionnement hors connexion : réseau d'abord, cache en secours
-const CACHE = 'capdroit-v1';
+const CACHE = 'capdroit-v2';
 self.addEventListener('install', (e) => { self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', (e) => {
