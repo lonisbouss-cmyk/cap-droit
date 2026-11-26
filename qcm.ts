@@ -1,0 +1,226 @@
+// CAP DROIT — QCM corrigés
+import type { Question } from './types';
+
+const Q = (m: string, q: string, c: string[], a: number, e: string): Question => ({ m, q, c, a, e });
+
+export const QCM: Question[] = [
+  // ---------- Introduction au droit ----------
+  Q('intro', 'Quel caractère ne fait PAS partie des caractères classiques de la règle de droit ?', ['Générale', 'Obligatoire', 'Coercitive', 'Individuelle'], 3, 'La règle de droit est générale et abstraite : elle ne vise pas une personne déterminée.'),
+  Q('intro', 'Une règle supplétive de volonté…', ['Ne peut jamais être écartée', 'S’applique seulement si les parties n’en ont pas décidé autrement', 'N’a pas de force obligatoire', 'Relève uniquement du droit public'], 1, 'La règle supplétive peut être écartée par contrat ; à défaut, elle s’impose. Elle s’oppose à la règle impérative (d’ordre public, art. 6 C. civ.).'),
+  Q('intro', 'Sauf disposition contraire, une loi publiée au Journal officiel entre en vigueur…', ['Le jour même de sa publication', 'Le lendemain de sa publication', 'Un jour franc après son arrivée en préfecture', 'Un mois après sa promulgation'], 1, 'Art. 1er C. civ. : à la date fixée, ou à défaut le lendemain de la publication.'),
+  Q('intro', 'L’article 5 du Code civil interdit au juge…', ['De refuser de juger', 'De rendre des arrêts de règlement', 'D’interpréter la loi', 'De relever un moyen d’office'], 1, 'Il est défendu aux juges de prononcer par voie de disposition générale et réglementaire (art. 5). Le refus de juger est, lui, un déni de justice (art. 4).'),
+  Q('intro', 'Le principe de non-rétroactivité de la loi civile a une valeur…', ['Constitutionnelle', 'Législative', 'Conventionnelle', 'Réglementaire'], 1, 'Il figure à l’article 2 du Code civil : le législateur peut y déroger. En matière pénale, la non-rétroactivité de la loi plus sévère est constitutionnelle (art. 8 DDHC).'),
+  Q('intro', 'Un droit de créance est…', ['Un droit réel', 'Un droit personnel', 'Un droit extrapatrimonial', 'Un droit intellectuel'], 1, 'Le droit personnel (de créance) permet d’exiger une prestation d’une personne ; le droit réel porte directement sur une chose.'),
+  Q('intro', 'Au-delà de quel montant un acte juridique doit-il en principe être prouvé par écrit ?', ['500 €', '1 000 €', '1 500 €', '5 000 €'], 2, 'Art. 1359 C. civ. et décret : 1 500 €. Les faits juridiques se prouvent par tout moyen.'),
+  Q('intro', 'Entre commerçants, les actes de commerce se prouvent…', ['Uniquement par acte authentique', 'Par tout moyen', 'Par écrit au-delà de 1 500 €', 'Par témoignage seulement'], 1, 'Liberté de la preuve entre commerçants (art. L. 110-3 C. com.).'),
+  Q('intro', 'Selon l’adage « specialia generalibus derogant »…', ['La loi générale l’emporte sur la loi spéciale', 'La loi spéciale déroge à la loi générale', 'La loi nouvelle abroge toujours la loi ancienne', 'Le règlement prime la loi'], 1, 'Les règles spéciales dérogent aux règles générales.'),
+  Q('intro', 'Le doute sur un fait à prouver profite…', ['À celui qui avait la charge de la preuve', 'À celui qui n’avait pas la charge de la preuve', 'Toujours au demandeur', 'Au juge, qui tranche en équité'], 1, 'Celui qui supporte la charge de la preuve supporte aussi le risque de l’absence de preuve.'),
+
+  // ---------- Personnes ----------
+  Q('personnes', 'La personnalité juridique commence…', ['À la conception', 'À la naissance, si l’enfant est né vivant et viable', 'À l’inscription à l’état civil', 'À la majorité'], 1, 'La personnalité s’acquiert par la naissance d’un enfant vivant et viable ; l’adage infans conceptus permet de remonter à la conception dans l’intérêt de l’enfant.'),
+  Q('personnes', 'Le droit au respect de la vie privée est prévu par…', ['L’article 9 du Code civil', 'L’article 16 du Code civil', 'L’article 1240 du Code civil', 'L’article 544 du Code civil'], 0, 'Art. 9 : « Chacun a droit au respect de sa vie privée. »'),
+  Q('personnes', 'Une convention de gestation pour autrui conclue en France est…', ['Valable si elle est gratuite', 'Nulle', 'Valable avec l’accord du juge', 'Annulable seulement par la mère porteuse'], 1, 'Art. 16-7 C. civ. : toute convention portant sur la procréation ou la gestation pour le compte d’autrui est nulle.'),
+  Q('personnes', 'Quelle mesure de protection organise une représentation continue du majeur ?', ['La sauvegarde de justice', 'La curatelle', 'La tutelle', 'L’émancipation'], 2, 'La tutelle est une mesure de représentation ; la curatelle, d’assistance ; la sauvegarde laisse la capacité.'),
+  Q('personnes', 'Le PACS peut être conclu…', ['Uniquement par deux personnes de sexe différent', 'Par deux personnes physiques majeures, de sexe différent ou de même sexe', 'Par un mineur émancipé', 'Par plus de deux personnes'], 1, 'Art. 515-1 C. civ.'),
+  Q('personnes', 'Quel devoir ne figure PAS à l’article 212 du Code civil ?', ['Respect', 'Fidélité', 'Obéissance', 'Assistance'], 2, 'Les époux se doivent mutuellement respect, fidélité, secours, assistance. Le devoir d’obéissance de la femme a disparu en 1938.'),
+  Q('personnes', 'Le divorce par consentement mutuel conventionnel prend la forme…', ['D’un jugement du JAF', 'D’un acte d’avocats déposé au rang des minutes d’un notaire', 'D’une déclaration en mairie', 'D’un acte d’huissier'], 1, 'Depuis le 1er janvier 2017, divorce sans juge : convention signée par les époux et leurs avocats, déposée chez un notaire.'),
+  Q('personnes', 'L’autorité parentale a pour finalité…', ['L’intérêt des parents', 'L’intérêt de l’enfant', 'L’intérêt de la famille élargie', 'L’ordre public'], 1, 'Art. 371-1 C. civ.'),
+  Q('personnes', 'Le concubin peut-il obtenir réparation du décès accidentel de son partenaire ?', ['Non, faute de lien de droit', 'Oui, depuis l’arrêt Dangereux (1970)', 'Oui, seulement s’ils étaient pacsés', 'Uniquement en cas de faute pénale'], 1, 'Ch. mixte, 27 févr. 1970 : l’article 1240 n’exige pas de lien de droit entre le défunt et le demandeur.'),
+
+  // ---------- Constitutionnel ----------
+  Q('constit', 'Qui a écrit « Le pouvoir arrête le pouvoir » ?', ['Rousseau', 'Sieyès', 'Montesquieu', 'Locke'], 2, 'Montesquieu, De l’esprit des lois (1748).'),
+  Q('constit', 'Le régime présidentiel se caractérise par…', ['La responsabilité du gouvernement devant le Parlement', 'Le droit de dissolution', 'Une séparation stricte des pouvoirs', 'Un exécutif bicéphale'], 2, 'Pas de responsabilité politique ni de dissolution : séparation stricte (ex. : États-Unis).'),
+  Q('constit', 'Depuis quand le Président de la République est-il élu au suffrage universel direct ?', ['1958', '1962', '1974', '2000'], 1, 'Révision référendaire du 28 octobre 1962 (première application en 1965).'),
+  Q('constit', 'Combien de membres nommés compte le Conseil constitutionnel ?', ['7', '9', '12', '15'], 1, 'Neuf membres nommés pour neuf ans, plus les anciens Présidents de la République membres de droit.'),
+  Q('constit', 'La décision Liberté d’association (1971) est importante car elle…', ['Crée la QPC', 'Intègre le Préambule dans les normes de référence du contrôle', 'Admet le contrôle de conventionnalité', 'Supprime le Sénat'], 1, 'Naissance du bloc de constitutionnalité : DDHC et Préambule de 1946 deviennent normes de référence.'),
+  Q('constit', 'Qui peut transmettre une QPC au Conseil constitutionnel ?', ['Toute juridiction directement', 'Le Conseil d’État ou la Cour de cassation', 'Le Président de la République', 'Soixante députés'], 1, 'Art. 61-1 C. : renvoi par le Conseil d’État ou la Cour de cassation après filtrage.'),
+  Q('constit', 'Une disposition déclarée inconstitutionnelle à la suite d’une QPC est…', ['Annulée rétroactivement dans tous les cas', 'Abrogée à la publication de la décision ou à une date ultérieure', 'Suspendue jusqu’à la prochaine loi', 'Inapplicable au seul litige en cause'], 1, 'Art. 62 al. 2 C. : effet abrogatif, éventuellement différé.'),
+  Q('constit', 'L’article 49 alinéa 3 de la Constitution permet…', ['Au Président de dissoudre l’Assemblée', 'D’engager la responsabilité du Gouvernement sur le vote d’un texte', 'De recourir au référendum', 'De réviser la Constitution'], 1, 'Le texte est considéré comme adopté sauf si une motion de censure est votée. Usage limité, hors budgets, à un texte par session depuis 2008.'),
+  Q('constit', 'Quel article de la Constitution prévoit les pouvoirs exceptionnels du Président ?', ['Article 11', 'Article 12', 'Article 16', 'Article 89'], 2, 'Art. 16 : appliqué une seule fois, en 1961.'),
+  Q('constit', 'Quelle disposition ne peut faire l’objet d’une révision selon l’article 89 ?', ['Le mode d’élection du Président', 'La forme républicaine du Gouvernement', 'Le nombre de députés', 'Le droit de dissolution'], 1, 'Art. 89 al. 5 C.'),
+  Q('constit', 'La souveraineté nationale, au sens de Sieyès, appartient…', ['Au peuple, somme des citoyens', 'À la Nation, entité abstraite', 'Au monarque', 'Aux collectivités territoriales'], 1, 'Théorie de la souveraineté nationale : la Nation s’exprime par ses représentants (mandat représentatif).'),
+
+  // ---------- Institutions juridictionnelles ----------
+  Q('instit', 'Quel juge tranche les conflits de compétence entre les deux ordres de juridiction ?', ['Le Conseil constitutionnel', 'La Cour de cassation', 'Le Tribunal des conflits', 'Le Conseil d’État'], 2, 'Le Tribunal des conflits, depuis 1872.'),
+  Q('instit', 'La Cour de cassation…', ['Rejuge les faits', 'Juge en droit et non en fait', 'Est une juridiction de premier degré', 'Juge les crimes'], 1, 'Elle contrôle la conformité des décisions aux règles de droit (art. 604 CPC).'),
+  Q('instit', 'Depuis 2020, la juridiction civile de droit commun de première instance est…', ['Le tribunal d’instance', 'Le tribunal de grande instance', 'Le tribunal judiciaire', 'Le tribunal de proximité'], 2, 'Fusion des TI et TGI au 1er janvier 2020.'),
+  Q('instit', 'Les magistrats du siège sont…', ['Hiérarchisés et amovibles', 'Inamovibles', 'Nommés par le préfet', 'Élus par les justiciables'], 1, 'L’inamovibilité garantit leur indépendance (art. 64 C.).'),
+  Q('instit', 'Depuis le 1er juillet 2022, huissiers de justice et commissaires-priseurs judiciaires sont devenus…', ['Notaires', 'Commissaires de justice', 'Greffiers', 'Mandataires judiciaires'], 1, 'Création de la profession de commissaire de justice.'),
+
+  // ---------- Contrats ----------
+  Q('contrats', 'Quelles sont les conditions de validité du contrat selon l’article 1128 ?', ['Consentement, capacité, objet, cause', 'Consentement, capacité, contenu licite et certain', 'Offre, acceptation, prix', 'Écrit, signature, date'], 1, 'La réforme de 2016 a supprimé l’objet et la cause comme conditions autonomes.'),
+  Q('contrats', 'Le contrat est conclu…', ['Dès l’émission de l’acceptation', 'Dès que l’acceptation parvient à l’offrant', 'Lors de la signature d’un écrit', 'Lors du paiement'], 1, 'Art. 1121 C. civ. : théorie de la réception.'),
+  Q('contrats', 'Le promettant révoque une promesse unilatérale avant la levée de l’option. Conséquence ?', ['La vente ne peut se former, seuls des dommages et intérêts sont dus', 'La révocation n’empêche pas la formation du contrat promis', 'La promesse est nulle', 'Le bénéficiaire perd tout recours'], 1, 'Art. 1124 al. 2 C. civ., qui a mis fin à la jurisprudence Cruz (1993).'),
+  Q('contrats', 'Le devoir précontractuel d’information porte-t-il sur l’estimation de la valeur de la prestation ?', ['Oui, toujours', 'Non', 'Seulement pour les professionnels', 'Seulement pour les immeubles'], 1, 'Art. 1112-1 al. 2 (et jurisprudence Baldus).'),
+  Q('contrats', 'L’erreur provoquée par un dol…', ['Doit être excusable', 'Est toujours excusable', 'N’est jamais une cause de nullité', 'Ne porte que sur la valeur'], 1, 'Art. 1139 C. civ. : l’erreur provoquée par le dol est toujours excusable ; elle est cause de nullité même sur la valeur ou les motifs.'),
+  Q('contrats', 'L’abus de l’état de dépendance est une forme de…', ['Dol', 'Violence', 'Erreur', 'Lésion'], 1, 'Art. 1143 C. civ.'),
+  Q('contrats', 'Dans un contrat d’adhésion, une clause créant un déséquilibre significatif est…', ['Nulle avec tout le contrat', 'Réputée non écrite', 'Valable si acceptée', 'Révisée par le juge'], 1, 'Art. 1171 C. civ. Le déséquilibre ne peut porter sur l’objet principal ni sur l’adéquation du prix.'),
+  Q('contrats', 'Quel arrêt est à l’origine de l’article 1170 (clause privant de sa substance l’obligation essentielle) ?', ['Canal de Craponne', 'Chronopost', 'Mercier', 'Baldus'], 1, 'Com., 22 oct. 1996, Chronopost, puis Faurecia II (2010).'),
+  Q('contrats', 'La nullité relative…', ['Protège l’intérêt général', 'Peut être invoquée par toute personne intéressée', 'Ne peut être invoquée que par la partie protégée', 'Est imprescriptible'], 2, 'Art. 1179 et 1181 C. civ. ; elle peut être couverte par confirmation.'),
+  Q('contrats', 'L’imprévision (art. 1195) permet d’abord…', ['La résolution automatique', 'La révision immédiate par le juge', 'Une demande de renégociation au cocontractant', 'La suspension du contrat'], 2, 'Le débiteur demande la renégociation et continue d’exécuter ; le juge n’intervient qu’ensuite.'),
+  Q('contrats', 'Quel arrêt refusait la révision du contrat pour imprévision ?', ['Gaz de Bordeaux', 'Canal de Craponne', 'Chronopost', 'Boot Shop'], 1, 'Civ., 6 mars 1876. Gaz de Bordeaux (1916) admet au contraire l’imprévision en droit administratif.'),
+  Q('contrats', 'La résolution unilatérale par notification est possible…', ['Jamais, seul le juge peut résoudre', 'En cas d’inexécution suffisamment grave, aux risques du créancier', 'Uniquement si une clause résolutoire le prévoit', 'Seulement entre commerçants'], 1, 'Art. 1224 et 1226 C. civ.'),
+  Q('contrats', 'Le créancier peut-il obtenir l’exécution forcée en nature ?', ['Toujours', 'Après mise en demeure, sauf impossibilité ou disproportion manifeste', 'Jamais pour une obligation de faire', 'Seulement en matière de vente'], 1, 'Art. 1221 C. civ.'),
+  Q('contrats', 'En responsabilité contractuelle, le débiteur n’est tenu que du dommage prévisible, sauf…', ['Force majeure', 'Faute lourde ou dolosive', 'Clause pénale', 'Mise en demeure'], 1, 'Art. 1231-3 C. civ.'),
+  Q('contrats', 'La clause pénale peut être modérée par le juge…', ['Jamais', 'Si elle est manifestement excessive', 'Seulement à la demande du débiteur', 'Seulement si le contrat le prévoit'], 1, 'Art. 1231-5 : modération ou augmentation, même d’office, si la pénalité est manifestement excessive ou dérisoire.'),
+  Q('contrats', 'L’obligation du médecin est en principe…', ['De résultat', 'De moyens', 'De garantie', 'Purement morale'], 1, 'Arrêt Mercier (1936) ; aujourd’hui art. L. 1142-1 CSP : responsabilité pour faute.'),
+
+  // ---------- Responsabilité civile ----------
+  Q('respciv', 'Quel article fonde la responsabilité du fait personnel ?', ['Art. 1103', 'Art. 1240', 'Art. 1242 al. 5', 'Art. 1245'], 1, '« Tout fait quelconque de l’homme, qui cause à autrui un dommage, oblige celui par la faute duquel il est arrivé à le réparer. »'),
+  Q('respciv', 'La garde d’une chose se définit par…', ['La propriété', 'L’usage, la direction et le contrôle', 'La détention matérielle seule', 'Le contrat de location'], 1, 'Arrêt Franck, Ch. réunies, 2 déc. 1941.'),
+  Q('respciv', 'Pour une chose inerte, la victime doit prouver…', ['La faute du gardien', 'Le rôle actif de la chose (anormalité)', 'Un contact', 'Rien, tout est présumé'], 1, 'Si la chose était inerte, la victime prouve son anormalité (position, état, comportement).'),
+  Q('respciv', 'Quel arrêt consacre un principe général de responsabilité du fait d’autrui ?', ['Jand’heur', 'Blieck', 'Bertrand', 'Perruche'], 1, 'Ass. plén., 29 mars 1991.'),
+  Q('respciv', 'La responsabilité des parents du fait de leur enfant mineur est…', ['Une responsabilité pour faute prouvée', 'Une présomption simple de faute', 'Une responsabilité de plein droit', 'Une responsabilité subsidiaire'], 2, 'Bertrand (1997) : seules la force majeure ou la faute de la victime exonèrent.'),
+  Q('respciv', 'Pour engager la responsabilité des parents, le fait de l’enfant doit être…', ['Fautif', 'Simplement la cause directe du dommage', 'Pénalement répréhensible', 'Intentionnel'], 1, 'Fullenwarth (1984), confirmé par Levert (2001).'),
+  Q('respciv', 'Selon l’arrêt Costedoat, le préposé qui agit dans les limites de sa mission…', ['Est toujours responsable', 'N’engage pas sa responsabilité à l’égard des tiers', 'Est responsable solidairement', 'Est responsable pénalement'], 1, 'Ass. plén., 25 févr. 2000.'),
+  Q('respciv', 'Le principe de réparation intégrale signifie…', ['Réparer tout le préjudice, rien que le préjudice', 'Doubler l’indemnité en cas de faute lourde', 'Réparer seulement le préjudice matériel', 'Plafonner l’indemnisation'], 0, 'Pas de dommages et intérêts punitifs en droit français, en principe.'),
+  Q('respciv', 'La perte de chance est réparable si elle est…', ['Hypothétique', 'Réelle et sérieuse', 'Supérieure à 50 %', 'Prouvée par écrit'], 1, 'La réparation est mesurée sur la chance perdue et ne peut égaler l’avantage espéré.'),
+  Q('respciv', 'Les accidents de la circulation impliquant un véhicule terrestre à moteur relèvent…', ['De l’art. 1242 al. 1', 'De la loi Badinter du 5 juillet 1985', 'De l’art. 1245', 'De l’art. 1243'], 1, 'Régime autonome et exclusif d’indemnisation.'),
+  Q('respciv', 'Quel délai de prescription pour une action en réparation d’un dommage corporel ?', ['5 ans', '10 ans à compter de la consolidation', '20 ans', '30 ans'], 1, 'Art. 2226 C. civ.'),
+
+  // ---------- Régime général ----------
+  Q('regime', 'Une condition se définit comme un événement…', ['Futur et certain', 'Futur et incertain', 'Passé et inconnu', 'Présent'], 1, 'Art. 1304. Le terme, lui, est futur et certain.'),
+  Q('regime', 'En matière civile, la solidarité entre codébiteurs…', ['Se présume', 'Ne se présume pas', 'Est toujours légale', 'Est interdite'], 1, 'Art. 1310 C. civ. Entre commerçants, elle est présumée (usage).'),
+  Q('regime', 'L’action paulienne permet au créancier…', ['D’exercer les droits de son débiteur', 'De faire déclarer inopposable un acte frauduleux du débiteur', 'De saisir les biens d’un tiers', 'D’annuler tout acte du débiteur'], 1, 'Art. 1341-2 C. civ. L’action oblique est à l’article 1341-1.'),
+  Q('regime', 'L’indemnité due au titre de l’enrichissement injustifié est égale…', ['À l’enrichissement', 'À l’appauvrissement', 'À la moindre des deux valeurs', 'À la plus forte des deux valeurs'], 2, 'Art. 1303 C. civ.'),
+  Q('regime', 'La compensation suppose des dettes…', ['Réciproques, certaines, liquides et exigibles', 'Contractuelles seulement', 'De même montant', 'Constatées par jugement'], 0, 'Art. 1347-1 C. civ.'),
+  Q('regime', 'Quel est le délai butoir de la prescription extinctive ?', ['10 ans', '20 ans', '30 ans', 'Aucun'], 1, 'Art. 2232 C. civ. : 20 ans à compter de la naissance du droit.'),
+  Q('regime', 'Le juge peut accorder au débiteur des délais de grâce dans la limite de…', ['6 mois', '1 an', '2 ans', '5 ans'], 2, 'Art. 1343-5 C. civ.'),
+
+  // ---------- Biens ----------
+  Q('biens', 'Les trois attributs du droit de propriété sont…', ['Usus, fructus, abusus', 'Possession, détention, jouissance', 'Titre, mode, cause', 'Corpus, animus, titulus'], 0, 'User, percevoir les fruits, disposer.'),
+  Q('biens', 'L’action en revendication de la propriété est…', ['Prescrite par 5 ans', 'Prescrite par 30 ans', 'Imprescriptible', 'Prescrite par 10 ans'], 2, 'La propriété ne s’éteint pas par le non-usage (art. 2227 C. civ.).'),
+  Q('biens', 'Un tracteur affecté par le propriétaire à l’exploitation de son fonds agricole est…', ['Un meuble par nature', 'Un immeuble par destination', 'Un meuble par anticipation', 'Un immeuble par nature'], 1, 'Meuble affecté par le propriétaire au service d’un fonds.'),
+  Q('biens', 'Le délai d’usucapion abrégée d’un immeuble (bonne foi et juste titre) est de…', ['5 ans', '10 ans', '20 ans', '30 ans'], 1, 'Art. 2272 al. 2 ; 30 ans en principe.'),
+  Q('biens', '« En fait de meubles, possession vaut titre » figure à l’article…', ['544', '1583', '2276', '2224'], 2, 'Art. 2276 C. civ.'),
+  Q('biens', 'L’usufruitier a droit…', ['Aux fruits et aux produits', 'Aux fruits seulement', 'Aux produits seulement', 'À la vente du bien'], 1, 'Les produits altèrent la substance, que l’usufruitier doit conserver.'),
+  Q('biens', 'Quel arrêt illustre l’abus du droit de propriété ?', ['Clément-Bayard', 'Teffaine', 'Blanco', 'Franck'], 0, 'Req., 3 août 1915.'),
+  Q('biens', 'Depuis la loi du 15 avril 2024, les troubles anormaux de voisinage sont codifiés à l’article…', ['1240', '1253', '544', '651'], 1, 'Art. 1253 C. civ.'),
+
+  // ---------- Administratif ----------
+  Q('admin', 'Quel arrêt lie compétence administrative et responsabilité du service public ?', ['Cadot', 'Blanco', 'Nicolo', 'Benjamin'], 1, 'TC, 8 févr. 1873.'),
+  Q('admin', 'L’arrêt Cadot (1889) met fin…', ['À la justice retenue', 'À la théorie du ministre-juge', 'Au Tribunal des conflits', 'À la compétence du juge judiciaire'], 1, 'Le Conseil d’État devient juge de droit commun en premier ressort.'),
+  Q('admin', 'Quelle composante de l’ordre public a été consacrée par l’arrêt Morsang-sur-Orge ?', ['La moralité publique', 'La dignité de la personne humaine', 'L’esthétique', 'La tranquillité'], 1, 'CE, Ass., 27 oct. 1995.'),
+  Q('admin', 'Le contrôle de proportionnalité des mesures de police remonte à l’arrêt…', ['Labonne', 'Benjamin', 'Heyriès', 'Lamotte'], 1, 'CE, 19 mai 1933.'),
+  Q('admin', 'Selon le CRPA, le silence gardé deux mois par l’administration vaut en principe…', ['Rejet', 'Acceptation', 'Irrecevabilité', 'Sursis'], 1, 'Art. L. 231-1 CRPA, avec de très nombreuses exceptions.'),
+  Q('admin', 'Une décision créatrice de droits illégale peut être retirée dans un délai de…', ['2 mois', '4 mois', '1 an', 'À tout moment'], 1, 'Art. L. 242-1 CRPA (jurisprudence Ternon, 2001).'),
+  Q('admin', 'Qui détient le pouvoir de police administrative générale au niveau national ?', ['Le ministre de l’Intérieur', 'Le Premier ministre', 'Le Parlement', 'Le préfet de police'], 1, 'Arrêt Labonne (1919), aujourd’hui le Premier ministre.'),
+  Q('admin', 'Un service public industriel et commercial relève en principe…', ['Du droit public et du juge administratif', 'Du droit privé et du juge judiciaire', 'Exclusivement du Tribunal des conflits', 'Du droit pénal'], 1, 'Bac d’Eloka (1921), avec des exceptions (agents de direction, comptable public, prérogatives de puissance publique).'),
+  Q('admin', 'Les lois de Rolland ne comprennent pas…', ['La continuité', 'L’égalité', 'La mutabilité', 'La rentabilité'], 3, 'Continuité, égalité, mutabilité (adaptation).'),
+  Q('admin', 'La responsabilité sans faute pour rupture d’égalité suppose un préjudice…', ['Moral', 'Anormal et spécial', 'Corporel', 'Supérieur à 10 000 €'], 1, 'Il doit excéder les charges normales et toucher un nombre limité de personnes.'),
+  Q('admin', 'L’arrêt Anguet (1911) consacre…', ['Le cumul de fautes', 'La faute lourde', 'La voie de fait', 'La théorie de l’imprévision'], 0, 'Faute de service et faute personnelle peuvent concourir au même dommage.'),
+  Q('admin', 'L’arrêt Gaz de Bordeaux (1916) consacre…', ['Le fait du prince', 'L’imprévision', 'La force majeure administrative', 'Les circonstances exceptionnelles'], 1, 'Indemnité d’imprévision en cas de bouleversement de l’économie du contrat.'),
+  Q('admin', 'Le principe de sécurité juridique a été consacré par l’arrêt…', ['KPMG (2006)', 'Nicolo (1989)', 'Arcelor (2007)', 'Koné (1996)'], 0, 'CE, Ass., 24 mars 2006.'),
+
+  // ---------- Contentieux administratif ----------
+  Q('contadm', 'Délai de droit commun du recours contentieux administratif ?', ['1 mois', '2 mois', '3 mois', '1 an'], 1, 'Art. R. 421-1 CJA.'),
+  Q('contadm', 'En l’absence de mention des voies et délais de recours, le juge admet un recours dans un délai raisonnable de…', ['2 mois', '6 mois', '1 an', '5 ans'], 2, 'CE, Ass., 13 juill. 2016, Czabaj.'),
+  Q('contadm', 'Le référé-liberté suppose…', ['Un doute sérieux sur la légalité', 'Une atteinte grave et manifestement illégale à une liberté fondamentale', 'Un recours au fond', 'Une décision administrative préalable'], 1, 'Art. L. 521-2 CJA, en plus de l’urgence ; décision sous 48 heures.'),
+  Q('contadm', 'Le référé-suspension exige…', ['Un recours au fond, l’urgence et un doute sérieux', 'Seulement l’urgence', 'Une liberté fondamentale', 'L’accord de l’administration'], 0, 'Art. L. 521-1 CJA.'),
+  Q('contadm', 'Depuis l’arrêt Danthony (2011), un vice de procédure entraîne l’annulation…', ['Toujours', 's’il a privé d’une garantie ou exercé une influence sur le sens de la décision', 'Jamais', 'Seulement s’il est d’ordre public'], 1, 'CE, Ass., 23 déc. 2011.'),
+  Q('contadm', 'Quel moyen est d’ordre public en excès de pouvoir ?', ['Le vice de forme', 'L’incompétence', 'L’erreur de fait', 'Le détournement de pouvoir'], 1, 'Le juge doit relever d’office l’incompétence.'),
+  Q('contadm', 'L’arrêt Tarn-et-Garonne (2014) ouvre aux tiers…', ['Le REP contre le contrat', 'Un recours de plein contentieux en contestation de validité du contrat', 'Le référé-liberté', 'L’action en responsabilité'], 1, 'Tiers lésés de façon suffisamment directe et certaine, dans les 2 mois.'),
+
+  // ---------- Pénal général ----------
+  Q('penalg', 'Le principe de légalité criminelle est énoncé à l’article…', ['111-1 C. pén.', '111-3 C. pén.', '121-3 C. pén.', '122-5 C. pén.'], 1, 'Art. 111-3, et art. 8 DDHC.'),
+  Q('penalg', 'La loi pénale plus douce…', ['Ne rétroagit jamais', 'Rétroagit aux faits non définitivement jugés', 'Ne s’applique qu’aux mineurs', 'S’applique même aux condamnations définitives'], 1, 'Art. 112-1 al. 3 C. pén.'),
+  Q('penalg', 'La tentative est punissable…', ['Toujours', 'Pour les crimes, et pour les délits si la loi le prévoit', 'Uniquement pour les contraventions', 'Jamais pour les crimes'], 1, 'Art. 121-4 C. pén.'),
+  Q('penalg', 'La tentative suppose…', ['Des actes préparatoires', 'Un commencement d’exécution et l’absence de désistement volontaire', 'Un résultat', 'Une intention seule'], 1, 'Art. 121-5 C. pén.'),
+  Q('penalg', 'Tirer sur un cadavre en le croyant vivant constitue…', ['Une infraction impossible non punissable', 'Une tentative de meurtre punissable', 'Un délit d’atteinte à l’intégrité du cadavre seulement', 'Une contravention'], 1, 'Perdereau, Crim., 16 janv. 1986.'),
+  Q('penalg', 'Quel arrêt affirme qu’il n’y a pas de complicité sans fait principal punissable ?', ['Laboube', 'Lacour', 'Perdereau', 'Halimi'], 1, 'Crim., 25 oct. 1962 ; d’où le délit de mandat criminel.'),
+  Q('penalg', 'La légitime défense des biens n’autorise jamais…', ['Un acte de défense', 'Un homicide volontaire', 'Une riposte proportionnée', 'L’appréhension de l’auteur'], 1, 'Art. 122-5 al. 2 C. pén.'),
+  Q('penalg', 'L’état de nécessité suppose un danger…', ['Passé', 'Actuel ou imminent', 'Hypothétique', 'Causé par l’auteur'], 1, 'Art. 122-7 C. pén.'),
+  Q('penalg', 'Un trouble psychique ayant seulement altéré le discernement…', ['Exonère totalement', 'Laisse l’auteur punissable, avec prise en compte dans la peine', 'Rend l’infraction nulle', 'Entraîne automatiquement l’internement'], 1, 'Art. 122-1 al. 2 C. pén.'),
+  Q('penalg', 'Les personnes morales sont pénalement responsables, à l’exception…', ['Des associations', 'De l’État', 'Des sociétés étrangères', 'Des collectivités territoriales'], 1, 'Art. 121-2 C. pén. Les collectivités le sont pour les activités délégables.'),
+  Q('penalg', 'La loi Fauchon du 10 juillet 2000 concerne…', ['Les délits non intentionnels et la causalité indirecte', 'La récidive', 'La garde à vue', 'Les mineurs'], 0, 'Art. 121-3 al. 4 : faute qualifiée exigée en cas de causalité indirecte.'),
+  Q('penalg', 'Les fonctions de la peine selon l’article 130-1 sont…', ['Punir et dissuader', 'Sanctionner et favoriser l’amendement, l’insertion ou la réinsertion', 'Réparer et indemniser', 'Neutraliser et éliminer'], 1, 'Art. 130-1 C. pén.'),
+
+  // ---------- Procédure pénale ----------
+  Q('procpen', 'Délai de prescription de l’action publique pour un délit ?', ['1 an', '3 ans', '6 ans', '10 ans'], 2, 'Art. 8 CPP depuis la loi du 27 février 2017.'),
+  Q('procpen', 'Durée initiale maximale de la garde à vue de droit commun ?', ['12 heures', '24 heures', '48 heures', '96 heures'], 1, 'Art. 63 CPP, prolongeable de 24 h.'),
+  Q('procpen', 'Qui décide d’un placement en détention provisoire ?', ['Le juge d’instruction seul', 'Le juge des libertés et de la détention', 'Le procureur', 'L’officier de police judiciaire'], 1, 'Sur saisine du juge d’instruction.'),
+  Q('procpen', 'Le principe d’opportunité des poursuites appartient…', ['Au juge d’instruction', 'Au procureur de la République', 'À la victime', 'Au préfet'], 1, 'Art. 40-1 CPP.'),
+  Q('procpen', 'Quelle décision a déclaré la garde à vue de droit commun inconstitutionnelle ?', ['Cons. const., 16 juill. 1971', 'Cons. const., 30 juill. 2010', 'Cons. const., 27 juill. 1994', 'Cons. const., 15 janv. 1975'], 1, 'Décision 2010-14/22 QPC.'),
+  Q('procpen', 'L’action civile appartient à ceux qui ont souffert d’un dommage…', ['Indirect', 'Personnel et directement causé par l’infraction', 'Moral uniquement', 'Collectif'], 1, 'Art. 2 CPP.'),
+  Q('procpen', 'En matière pénale, le juge décide d’après…', ['La preuve légale', 'Son intime conviction', 'Les seuls aveux', 'L’avis du parquet'], 1, 'Art. 427 CPP (et art. 353 pour la cour d’assises).'),
+  Q('procpen', 'Délai d’appel d’un jugement correctionnel pour le prévenu ?', ['5 jours', '10 jours', '1 mois', '2 mois'], 1, 'Art. 498 CPP.'),
+  Q('procpen', 'Le pourvoi en cassation en matière pénale se forme dans un délai de…', ['5 jours francs', '10 jours', '1 mois', '2 mois'], 0, 'Art. 568 CPP.'),
+  Q('procpen', 'L’enquête de flagrance dure en principe…', ['48 heures', '8 jours, renouvelables une fois', '1 mois', 'Sans limite'], 1, 'Art. 53 CPP.'),
+
+  // ---------- Pénal spécial ----------
+  Q('penals', 'Le vol est défini comme…', ['La soustraction frauduleuse de la chose d’autrui', 'Le détournement d’une chose remise', 'L’obtention d’un bien par tromperie', 'La détention d’une chose volée'], 0, 'Art. 311-1 C. pén.'),
+  Q('penals', 'Un simple mensonge suffit-il à caractériser l’escroquerie ?', ['Oui', 'Non, il faut des manœuvres frauduleuses, un faux nom ou une fausse qualité', 'Oui, s’il est écrit', 'Oui, s’il est répété'], 1, 'Le mensonge doit être corroboré par des éléments extérieurs (art. 313-1).'),
+  Q('penals', 'L’abus de confiance suppose…', ['Une soustraction', 'Une remise volontaire préalable puis un détournement', 'Une violence', 'Une tromperie initiale'], 1, 'Art. 314-1 C. pén.'),
+  Q('penals', 'Le recel est une infraction…', ['Instantanée', 'Continue', 'D’habitude', 'Non intentionnelle'], 1, 'Il dure tant que la détention se prolonge ; la prescription court à compter de sa cessation.'),
+  Q('penals', 'Ce qui distingue le meurtre des violences mortelles est…', ['L’arme utilisée', 'L’intention de donner la mort', 'La préméditation', 'Le nombre de coups'], 1, 'L’animus necandi.'),
+  Q('penals', 'L’assassinat est un meurtre commis…', ['En réunion', 'Avec préméditation ou guet-apens', 'Sur mineur', 'Avec arme'], 1, 'Art. 221-3 C. pén.'),
+  Q('penals', 'L’homicide involontaire peut-il être retenu à l’égard d’un fœtus ?', ['Oui', 'Non, selon l’Assemblée plénière (2001)', 'Oui, après 22 semaines', 'Oui, si la mère porte plainte'], 1, 'Interprétation stricte de la loi pénale.'),
+  Q('penals', 'Peine encourue pour un vol simple ?', ['1 an et 15 000 €', '3 ans et 45 000 €', '5 ans et 75 000 €', '7 ans et 100 000 €'], 1, 'Art. 311-3 C. pén.'),
+  Q('penals', 'L’omission de porter secours est punie de…', ['1 an', '3 ans', '5 ans et 75 000 €', '10 ans'], 2, 'Art. 223-6 C. pén.'),
+
+  // ---------- Travail ----------
+  Q('travail', 'Le critère décisif du contrat de travail est…', ['La rémunération', 'Le lien de subordination', 'L’écrit', 'La durée'], 1, 'Société générale, Soc., 13 nov. 1996.'),
+  Q('travail', 'La qualification de contrat de travail dépend…', ['De la volonté des parties', 'Des conditions de fait dans lesquelles l’activité est exercée', 'De l’inscription au registre du commerce', 'Du montant de la rémunération'], 1, 'Elle est d’ordre public (Take Eat Easy 2018, Uber 2020).'),
+  Q('travail', 'Durée maximale initiale de la période d’essai d’un cadre en CDI ?', ['2 mois', '3 mois', '4 mois', '6 mois'], 2, 'Art. L. 1221-19 C. trav.'),
+  Q('travail', 'Un licenciement pour motif personnel doit reposer sur…', ['Une faute grave', 'Une cause réelle et sérieuse', 'Un accord du salarié', 'Une autorisation administrative'], 1, 'Art. L. 1232-1 C. trav.'),
+  Q('travail', 'Délai pour contester la rupture du contrat de travail ?', ['2 mois', '6 mois', '12 mois', '5 ans'], 2, 'Art. L. 1471-1 C. trav.'),
+  Q('travail', 'Le barème d’indemnisation (art. L. 1235-3) est écarté en cas de…', ['Licenciement sans cause réelle et sérieuse', 'Licenciement nul', 'Démission', 'Rupture conventionnelle'], 1, 'Nullité (harcèlement, discrimination, liberté fondamentale) : au moins 6 mois de salaire.'),
+  Q('travail', 'Le licenciement d’un salarié gréviste est nul, sauf…', ['Faute grave', 'Faute lourde', 'Motif économique', 'Accord collectif'], 1, 'Art. L. 2511-1 C. trav.'),
+  Q('travail', 'La durée légale du travail est de…', ['35 heures par semaine', '39 heures par semaine', '1 607 heures par mois', '48 heures par semaine'], 0, 'Art. L. 3121-27 C. trav.'),
+  Q('travail', 'Un changement des conditions de travail…', ['Nécessite l’accord du salarié', 'Relève du pouvoir de direction de l’employeur', 'Est interdit', 'Nécessite un avenant écrit'], 1, 'À la différence de la modification du contrat (rémunération, qualification…).'),
+  Q('travail', 'Le CSE doit être mis en place à partir de…', ['11 salariés', '20 salariés', '50 salariés', '300 salariés'], 0, 'Seuil d’effectif atteint pendant 12 mois consécutifs.'),
+  Q('travail', 'L’arrêt Nikon (2001) protège…', ['Le droit de grève', 'Le secret des correspondances du salarié', 'Le droit à la déconnexion', 'La liberté syndicale'], 1, 'Soc., 2 oct. 2001.'),
+
+  // ---------- Sociétés / affaires ----------
+  Q('societes', 'Une société acquiert la personnalité morale…', ['À la signature des statuts', 'À son immatriculation au RCS', 'Au dépôt des fonds', 'À la première assemblée'], 1, 'Art. 1842 C. civ. et L. 210-6 C. com.'),
+  Q('societes', 'Dans une SNC, les associés sont…', ['Tenus dans la limite de leurs apports', 'Indéfiniment et solidairement responsables', 'Non responsables', 'Responsables à proportion de leurs parts'], 1, 'Ils ont en outre la qualité de commerçant.'),
+  Q('societes', 'Nombre maximal d’associés dans une SARL ?', ['50', '100', '200', 'Illimité'], 1, 'Art. L. 223-3 C. com.'),
+  Q('societes', 'La clause léonine est…', ['Valable', 'Réputée non écrite', 'Cause de nullité de la société', 'Réservée aux SAS'], 1, 'Art. 1844-1 C. civ.'),
+  Q('societes', 'La responsabilité du dirigeant envers les tiers suppose une faute…', ['Simple de gestion', 'Séparable de ses fonctions', 'Pénale', 'Contractuelle'], 1, 'Seusse, Com., 20 mai 2003.'),
+  Q('societes', 'La cessation des paiements se définit comme…', ['Un bilan négatif', 'L’impossibilité de faire face au passif exigible avec l’actif disponible', 'Un chiffre d’affaires en baisse', 'Une perte de la moitié du capital'], 1, 'Art. L. 631-1 C. com.'),
+  Q('societes', 'Est commerçant celui qui…', ['Est inscrit à la chambre de commerce', 'Exerce des actes de commerce et en fait sa profession habituelle', 'Vend des biens', 'Dirige une SA'], 1, 'Art. L. 121-1 C. com.'),
+  Q('societes', 'La loi PACTE (2019) a modifié l’article 1833 pour imposer…', ['Un capital minimum', 'La gestion dans l’intérêt social en considérant les enjeux sociaux et environnementaux', 'La parité au conseil', 'Un commissaire aux comptes'], 1, 'Art. 1833 al. 2 C. civ.'),
+
+  // ---------- Union européenne ----------
+  Q('ue', 'Quel arrêt consacre l’effet direct du droit communautaire ?', ['Costa c/ ENEL', 'Van Gend en Loos', 'Simmenthal', 'Francovich'], 1, 'CJCE, 5 févr. 1963.'),
+  Q('ue', 'Quel arrêt consacre la primauté du droit communautaire ?', ['Van Gend en Loos', 'Costa c/ ENEL', 'Cassis de Dijon', 'Arcelor'], 1, 'CJCE, 15 juill. 1964.'),
+  Q('ue', 'Une directive non transposée peut-elle être invoquée contre un particulier ?', ['Oui, toujours', 'Non, pas d’effet direct horizontal', 'Oui, après 5 ans', 'Seulement devant la CJUE'], 1, 'Effet direct vertical uniquement (contre l’État).'),
+  Q('ue', 'Qui dispose en principe du monopole de l’initiative législative dans l’UE ?', ['Le Parlement européen', 'La Commission européenne', 'Le Conseil européen', 'La CJUE'], 1, 'Art. 17 TUE.'),
+  Q('ue', 'Le renvoi préjudiciel est prévu par…', ['L’article 267 TFUE', 'L’article 55 de la Constitution', 'L’article 6 CEDH', 'L’article 288 TFUE'], 0, 'Obligatoire pour les juridictions statuant en dernier ressort, sauf acte clair.'),
+  Q('ue', 'L’arrêt Francovich (1991) consacre…', ['La reconnaissance mutuelle', 'La responsabilité de l’État pour violation du droit de l’Union', 'La primauté', 'L’effet direct des directives'], 1, 'CJCE, 19 nov. 1991.'),
+  Q('ue', 'Le règlement de l’UE est…', ['Obligatoire quant au résultat seulement', 'Obligatoire dans tous ses éléments et directement applicable', 'Non contraignant', 'Applicable après transposition'], 1, 'Art. 288 TFUE.'),
+
+  // ---------- Contrats spéciaux ----------
+  Q('speciaux', 'Dans la vente, le transfert de propriété s’opère en principe…', ['À la livraison', 'Au paiement du prix', 'Dès l’accord sur la chose et le prix', 'À la signature d’un acte notarié'], 2, 'Art. 1583 C. civ. : transfert solo consensu.'),
+  Q('speciaux', 'Délai de l’action en garantie des vices cachés ?', ['1 an à compter de la vente', '2 ans à compter de la découverte du vice', '5 ans à compter de la vente', '10 ans'], 1, 'Art. 1648 C. civ.'),
+  Q('speciaux', 'Une chose différente de celle convenue relève…', ['De la garantie des vices cachés', 'De l’obligation de délivrance conforme', 'De la garantie d’éviction', 'De la lésion'], 1, 'Défaut de conformité ≠ vice caché.'),
+  Q('speciaux', 'Le vendeur professionnel peut-il invoquer une clause excluant la garantie des vices cachés face à un non-professionnel ?', ['Oui', 'Non, il est présumé connaître les vices', 'Oui si le prix est bas', 'Oui s’il est de bonne foi'], 1, 'Présomption irréfragable de connaissance des vices pesant sur le vendeur professionnel.'),
+  Q('speciaux', 'Ce qui distingue le contrat d’entreprise du contrat de travail est…', ['La rémunération', 'L’absence de lien de subordination', 'La durée', 'L’écrit'], 1, 'L’entrepreneur agit en toute indépendance.'),
+  Q('speciaux', 'Le mandataire agit…', ['En son nom et pour son compte', 'Au nom et pour le compte du mandant', 'En son nom mais pour le compte du mandant', 'Pour le compte d’un tiers'], 1, 'Art. 1984 C. civ. (représentation parfaite). Le commissionnaire agit en son propre nom.'),
+
+  // ---------- Procédure civile ----------
+  Q('proccivile', 'Le juge doit statuer sur tout ce qui est demandé et seulement sur ce qui est demandé : article…', ['4 CPC', '5 CPC', '12 CPC', '16 CPC'], 1, 'Interdiction de statuer ultra ou infra petita.'),
+  Q('proccivile', 'Le défaut de qualité à agir est…', ['Une exception de procédure', 'Une fin de non-recevoir', 'Une défense au fond', 'Une nullité de forme'], 1, 'Art. 122 CPC.'),
+  Q('proccivile', 'Les exceptions de procédure doivent être soulevées…', ['En tout état de cause', 'Avant toute défense au fond ou fin de non-recevoir', 'En appel uniquement', 'Après les plaidoiries'], 1, 'Art. 74 CPC : in limine litis.'),
+  Q('proccivile', 'Délai d’appel en matière contentieuse ?', ['15 jours', '1 mois', '2 mois', '3 mois'], 1, 'Art. 538 CPC.'),
+  Q('proccivile', 'Le juge peut-il fonder sa décision sur un moyen de droit relevé d’office ?', ['Non, jamais', 'Oui, après avoir invité les parties à présenter leurs observations', 'Oui, sans formalité', 'Seulement en cassation'], 1, 'Art. 16 al. 3 CPC : principe de la contradiction.'),
+  Q('proccivile', 'L’arrêt Cesareo (2006) consacre…', ['Le principe de concentration des moyens', 'Le référé-provision', 'L’exécution provisoire', 'La médiation obligatoire'], 0, 'Ass. plén., 7 juill. 2006.'),
+  Q('proccivile', 'Un délai expirant un dimanche est…', ['Expiré le vendredi', 'Prorogé au premier jour ouvrable suivant', 'Expiré le dimanche à minuit', 'Suspendu d’une semaine'], 1, 'Art. 642 CPC.'),
+  Q('proccivile', 'L’article 145 CPC permet…', ['Une mesure d’instruction avant tout procès', 'Un référé-liberté', 'Un appel immédiat', 'Une saisie conservatoire'], 0, 'Motif légitime de conserver ou d’établir une preuve.'),
+
+  // ---------- Libertés / fiscal / déontologie ----------
+  Q('libertes', 'Quel article de la Conv. EDH est absolu, sans dérogation possible ?', ['Article 8', 'Article 10', 'Article 3', 'Article 11'], 2, 'L’interdiction de la torture et des traitements inhumains ou dégradants est absolue.'),
+  Q('libertes', 'Selon l’arrêt Handyside (1976), la liberté d’expression protège aussi…', ['Uniquement les informations vraies', 'Les idées qui heurtent, choquent ou inquiètent', 'Seulement la presse', 'Seulement les opinions politiques'], 1, 'CEDH, 7 déc. 1976.'),
+  Q('libertes', 'Le principe de fraternité a été reconnu valeur constitutionnelle en…', ['1971', '1994', '2018', '2022'], 2, 'Cons. const., 6 juill. 2018, n° 2018-717/718 QPC.'),
+  Q('libertes', 'Le juge gardien de la liberté individuelle selon l’article 66 de la Constitution est…', ['Le juge administratif', 'L’autorité judiciaire', 'Le Conseil constitutionnel', 'Le Défenseur des droits'], 1, 'Art. 66 C.'),
+  Q('libertes', 'Une restriction à une liberté conventionnelle doit être…', ['Prévue par la loi, poursuivre un but légitime et être nécessaire dans une société démocratique', 'Simplement prévue par un règlement', 'Approuvée par référendum', 'Temporaire'], 0, 'Triple condition des § 2 des articles 8 à 11 CEDH.'),
+  Q('libertes', 'La dignité de la personne humaine a valeur constitutionnelle depuis…', ['Liberté d’association (1971)', 'Bioéthique (1994)', 'IVG (1975)', 'Fraternité (2018)'], 1, 'Cons. const., 27 juill. 1994.'),
+  Q('fiscal', 'Le principe de légalité fiscale signifie que…', ['Le Gouvernement fixe les taux par décret', 'La loi fixe l’assiette, le taux et les modalités de recouvrement', 'Les collectivités fixent librement l’impôt', 'Le juge peut créer un impôt'], 1, 'Art. 34 C. et art. 14 DDHC.'),
+  Q('fiscal', 'Le taux normal de TVA en France métropolitaine est de…', ['5,5 %', '10 %', '20 %', '25 %'], 2, 'Taux normal de 20 %, taux réduits de 10 %, 5,5 % et 2,1 %.'),
+  Q('fiscal', 'Le taux normal de l’impôt sur les sociétés est de…', ['15 %', '25 %', '33,33 %', '35 %'], 1, 'Depuis 2022 ; taux réduit de 15 % pour les PME sur une fraction du bénéfice.'),
+  Q('fiscal', 'Avant de saisir le juge de l’impôt, le contribuable doit…', ['Payer une amende', 'Former une réclamation préalable auprès de l’administration', 'Saisir le Défenseur des droits', 'Obtenir l’accord du ministre'], 1, 'Réclamation préalable obligatoire (Livre des procédures fiscales).'),
+  Q('deonto', 'Le pacte de quota litis est…', ['Obligatoire', 'Interdit', 'Autorisé au-delà de 10 000 €', 'Autorisé devant les prud’hommes'], 1, 'L’honoraire ne peut être fixé exclusivement en fonction du résultat ; un honoraire complémentaire de résultat est permis.'),
+  Q('deonto', 'Le secret professionnel de l’avocat est…', ['Relatif', 'Général, absolu, illimité dans le temps et d’ordre public', 'Levé à la demande du client', 'Limité aux affaires pénales'], 1, 'Art. 2 du RIN.'),
+  Q('deonto', 'Quel principe ne figure pas dans le serment de l’avocat ?', ['Dignité', 'Indépendance', 'Probité', 'Rentabilité'], 3, 'Dignité, conscience, indépendance, probité et humanité.'),
+  Q('deonto', 'Les correspondances entre avocats sont en principe…', ['Publiques', 'Confidentielles', 'Produites librement en justice', 'Transmises au bâtonnier'], 1, 'Sauf si elles portent la mention « officielle » et répondent aux conditions du RIN.'),
+];
