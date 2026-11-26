@@ -29,6 +29,7 @@ jobs:
           cp -r repo/. app/
           rm -rf app/.git app/.github
           cd app
+          node extras/mkicon.js
           node -e "
           const fs = require('fs');
           const a = JSON.parse(fs.readFileSync('app.json', 'utf8'));
